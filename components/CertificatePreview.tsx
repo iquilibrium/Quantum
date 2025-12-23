@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Certificate } from './Certificate';
 import { Button } from './Button';
@@ -16,20 +15,30 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
   courseTitle,
   onBack
 }) => {
-  const certificateRef = useRef<HTMLDivElement>(null);
+  // We use a separate ref for the printable version to ensure it is captured at full scale/resolution
+  // without being affected by the responsive CSS transforms used for the preview.
+  const printRef = useRef<HTMLDivElement>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const handleDownloadCertificate = async () => {
-    if (!certificateRef.current) return;
+    if (!printRef.current) return;
     setIsGeneratingPdf(true);
 
     try {
       // 1. Convert DOM to Canvas
-      const canvas = await html2canvas(certificateRef.current, {
-        scale: 2, // Higher resolution for print
+      // Capture the off-screen, full-size element
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2, // 2x scale for crisp print quality (resulting in ~2246px width)
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
+        // Force dimensions to match the A4 landscape pixels logic
+        width: 1123,
+        height: 794,
+        windowWidth: 1123,
+        windowHeight: 794,
+        x: 0,
+        y: 0
       });
 
       // 2. Convert Canvas to Image Data
@@ -50,8 +59,25 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
     }
   };
 
+  const currentDate = new Date().toLocaleDateString('pt-BR');
+
   return (
-    <div className="h-full bg-slate-900 flex flex-col overflow-hidden">
+    <div className="h-full bg-slate-900 flex flex-col overflow-hidden relative">
+      
+      {/* 
+        HIDDEN PRINT VERSION 
+        Rendered off-screen to ensure html2canvas sees the element at full 1123x794px size
+        without any CSS transforms (scale) that distort the capture.
+      */}
+      <div style={{ position: 'fixed', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}>
+        <Certificate 
+          ref={printRef}
+          studentName={studentName}
+          courseTitle={courseTitle}
+          completionDate={currentDate}
+        />
+      </div>
+
       {/* Scrollable Content Area */}
       <div className="flex-1 overflow-y-auto w-full px-4 py-6 md:py-8 custom-scrollbar">
         <div className="max-w-6xl mx-auto flex flex-col min-h-full">
@@ -73,25 +99,21 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             <div className="w-10 md:w-24"></div> {/* Spacer */}
           </div>
 
-          {/* Certificate Container with Explicit Height Control */}
+          {/* Certificate Container with Explicit Height Control for PREVIEW */}
           <div className="flex-1 flex flex-col items-center justify-center w-full mb-8">
             <div className="bg-slate-800 p-1 md:p-8 rounded-2xl shadow-2xl border border-slate-700 w-full flex justify-center overflow-hidden">
                {/* 
-                  CRITICAL FIX: 
-                  Use explicit height classes on the wrapper to match the visual height of the scaled element.
-                  Original Height: 794px.
-                  Scale 0.26 (Mobile) -> Height ~206px -> Class h-[210px]
-                  Scale 0.45 (SM) -> Height ~357px -> Class sm:h-[360px]
-                  Scale 0.60 (MD) -> Height ~476px -> Class md:h-[480px]
-                  Scale 0.85 (XL) -> Height ~675px -> Class xl:h-[680px]
+                  Responsive Wrapper:
+                  We scale this visual representation for the user's screen,
+                  but we DO NOT print this one.
                */}
                <div className="relative w-full flex justify-center h-[210px] sm:h-[360px] md:h-[480px] lg:h-[600px] xl:h-[680px] transition-all duration-300">
                  <div className="absolute top-0 left-1/2 -translate-x-1/2 origin-top transform scale-[0.26] sm:scale-[0.45] md:scale-[0.6] lg:scale-[0.75] xl:scale-[0.85]">
                     <Certificate 
-                      ref={certificateRef}
+                      // No ref needed here as we don't capture this instance
                       studentName={studentName}
                       courseTitle={courseTitle}
-                      completionDate={new Date().toLocaleDateString('pt-BR')}
+                      completionDate={currentDate}
                     />
                  </div>
                </div>
@@ -102,7 +124,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             </p>
           </div>
 
-          {/* Action Bar - Always visible at bottom of content flow */}
+          {/* Action Bar */}
           <div className="flex flex-col items-center gap-4 pb-8 md:pb-0 mt-auto">
             <Button 
               onClick={handleDownloadCertificate} 
