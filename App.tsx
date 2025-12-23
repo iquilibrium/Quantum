@@ -188,6 +188,7 @@ const App: React.FC = () => {
           <CertificatePreview 
             studentName={user.name}
             courseTitle={courseData.title}
+            config={courseData.certificateConfig} // Pass config
             onBack={() => setCurrentView('course')}
           />
         )}

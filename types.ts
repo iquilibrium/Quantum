@@ -46,10 +46,22 @@ export interface Module {
   isActive: boolean; // Novo campo
 }
 
+export interface CertificateConfig {
+  title: string;
+  subtitle: string;
+  bodyText: string;
+  signerName: string;
+  signerRole: string;
+  institutionName: string;
+  primaryColor: string; // Hex code
+  displaySeal: boolean;
+}
+
 export interface Course {
   id: string;
   title: string;
   modules: Module[];
+  certificateConfig: CertificateConfig; // Novo campo de configuração
 }
 
 export type ViewState = 'dashboard' | 'course' | 'admin' | 'profile' | 'certificate';

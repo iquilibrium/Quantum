@@ -1,18 +1,22 @@
+
 import React, { useRef, useState } from 'react';
 import { Certificate } from './Certificate';
 import { Button } from './Button';
+import { CertificateConfig } from '../types'; // Import type
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 interface CertificatePreviewProps {
   studentName: string;
   courseTitle: string;
+  config: CertificateConfig; // Add config prop
   onBack: () => void;
 }
 
 export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
   studentName,
   courseTitle,
+  config,
   onBack
 }) => {
   // We use a separate ref for the printable version to ensure it is captured at full scale/resolution
@@ -75,6 +79,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
           studentName={studentName}
           courseTitle={courseTitle}
           completionDate={currentDate}
+          config={config} // Pass config
         />
       </div>
 
@@ -114,6 +119,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                       studentName={studentName}
                       courseTitle={courseTitle}
                       completionDate={currentDate}
+                      config={config} // Pass config
                     />
                  </div>
                </div>

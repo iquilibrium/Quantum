@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Course, Module, Lesson, QuizOption, User } from '../types';
+import { Course, Module, Lesson, QuizOption, User, CertificateConfig } from '../types';
 import { Button } from './Button';
+import { Certificate } from './Certificate'; // Import para Preview
 
 interface AdminPanelProps {
   course: Course;
@@ -11,7 +12,7 @@ interface AdminPanelProps {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpdateCourse, onUpdateStudent }) => {
-  const [activeTab, setActiveTab] = useState<'content' | 'students'>('students');
+  const [activeTab, setActiveTab] = useState<'content' | 'students' | 'certificate'>('students');
 
   // --- CONTENT MANAGEMENT STATES ---
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
@@ -21,6 +22,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
   const [activeModuleForLesson, setActiveModuleForLesson] = useState<string | null>(null);
+
+  // --- CERTIFICATE MANAGEMENT STATES ---
+  const [certForm, setCertForm] = useState<CertificateConfig>(course.certificateConfig || {
+      title: 'Certificado',
+      subtitle: 'de conclusão',
+      bodyText: 'Este certificado é orgulhosamente concedido a',
+      signerName: 'Diretor Responsável',
+      signerRole: 'Diretor Acadêmico',
+      institutionName: 'Quantum',
+      primaryColor: '#7c3aed',
+      displaySeal: true
+  });
+
+  // --- CERTIFICATE HELPERS ---
+  const handleCertChange = (field: keyof CertificateConfig, value: any) => {
+    const updatedForm = { ...certForm, [field]: value };
+    setCertForm(updatedForm);
+    // Atualiza o curso em tempo real para o preview funcionar, ou poderia ser num botão "Salvar"
+    onUpdateCourse({ ...course, certificateConfig: updatedForm });
+  };
+
 
   // --- CONTENT HELPERS ---
 
@@ -164,18 +186,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
             </div>
          </div>
          
-         <div className="flex gap-6 border-b border-slate-100 dark:border-slate-700 -mb-4">
+         <div className="flex gap-6 border-b border-slate-100 dark:border-slate-700 -mb-4 overflow-x-auto">
              <button 
                 onClick={() => setActiveTab('students')}
-                className={`pb-4 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'students' ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                className={`pb-4 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${activeTab === 'students' ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
              >
                 Alunos & Dashboard
              </button>
              <button 
                 onClick={() => setActiveTab('content')}
-                className={`pb-4 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'content' ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                className={`pb-4 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${activeTab === 'content' ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
              >
-                Gerenciar Conteúdo do Curso
+                Gerenciar Conteúdo
+             </button>
+             <button 
+                onClick={() => setActiveTab('certificate')}
+                className={`pb-4 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${activeTab === 'certificate' ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+             >
+                Personalizar Certificado
              </button>
          </div>
       </div>
@@ -359,6 +387,124 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
             ))}
            </div>
         )}
+
+        {/* --- CERTIFICATE TAB --- */}
+        {activeTab === 'certificate' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in h-full">
+                {/* Form Side */}
+                <div className="space-y-6 overflow-y-auto pr-2">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-4">Configurações Gerais</h3>
+                        <div className="space-y-4">
+                             <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome da Instituição</label>
+                                <input 
+                                    className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    value={certForm.institutionName}
+                                    onChange={(e) => handleCertChange('institutionName', e.target.value)}
+                                />
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Título Principal</label>
+                                    <input 
+                                        className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                        value={certForm.title}
+                                        onChange={(e) => handleCertChange('title', e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Subtítulo</label>
+                                    <input 
+                                        className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                        value={certForm.subtitle}
+                                        onChange={(e) => handleCertChange('subtitle', e.target.value)}
+                                    />
+                                </div>
+                             </div>
+                             <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Texto do Corpo</label>
+                                <textarea 
+                                    className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white h-20"
+                                    value={certForm.bodyText}
+                                    onChange={(e) => handleCertChange('bodyText', e.target.value)}
+                                />
+                             </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-4">Assinatura e Estilo</h3>
+                        <div className="space-y-4">
+                             <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome do Signatário</label>
+                                    <input 
+                                        className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                        value={certForm.signerName}
+                                        onChange={(e) => handleCertChange('signerName', e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cargo</label>
+                                    <input 
+                                        className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                        value={certForm.signerRole}
+                                        onChange={(e) => handleCertChange('signerRole', e.target.value)}
+                                    />
+                                </div>
+                             </div>
+                             
+                             <div className="flex items-center gap-6 pt-2">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Cor Primária (Hex)</label>
+                                    <div className="flex items-center gap-2">
+                                        <input 
+                                            type="color" 
+                                            value={certForm.primaryColor}
+                                            onChange={(e) => handleCertChange('primaryColor', e.target.value)}
+                                            className="h-10 w-10 rounded cursor-pointer border-0"
+                                        />
+                                        <input 
+                                            type="text"
+                                            value={certForm.primaryColor}
+                                            onChange={(e) => handleCertChange('primaryColor', e.target.value)}
+                                            className="border rounded-lg px-3 py-2 w-28 dark:bg-slate-700 dark:border-slate-600 dark:text-white uppercase"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 mt-6">
+                                    <input 
+                                        type="checkbox"
+                                        id="displaySeal"
+                                        checked={certForm.displaySeal}
+                                        onChange={(e) => handleCertChange('displaySeal', e.target.checked)}
+                                        className="w-5 h-5 text-brand-600 rounded focus:ring-brand-500"
+                                    />
+                                    <label htmlFor="displaySeal" className="text-sm font-medium text-slate-700 dark:text-slate-300 select-none cursor-pointer">Exibir Selo de Verificação</label>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Preview Side */}
+                <div className="flex flex-col">
+                    <h3 className="font-bold text-slate-500 text-sm uppercase mb-4">Pré-visualização em Tempo Real</h3>
+                    <div className="bg-slate-200 dark:bg-slate-950 p-4 rounded-xl flex items-center justify-center border border-slate-300 dark:border-slate-800 flex-1 overflow-hidden relative min-h-[400px]">
+                        <div className="origin-center transform scale-[0.4] sm:scale-[0.5] lg:scale-[0.45] xl:scale-[0.6] transition-all shadow-2xl">
+                             <Certificate 
+                                studentName="Nome do Aluno"
+                                courseTitle={course.title}
+                                completionDate="DD/MM/AAAA"
+                                config={certForm}
+                             />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
       </div>
 
       {/* --- MODAL DE MÓDULO --- */}

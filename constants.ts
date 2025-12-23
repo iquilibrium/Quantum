@@ -65,6 +65,16 @@ export const MOCK_STUDENTS: User[] = [
 export const COURSE_DATA: Course = {
   id: 'c_quantum_full',
   title: 'Mecânica Quântica, Vibração e as 7 Leis Herméticas',
+  certificateConfig: {
+    title: 'Certificado',
+    subtitle: 'de conclusão',
+    bodyText: 'Este certificado é orgulhosamente concedido a',
+    signerName: 'Dr. Hermes Trismegisto',
+    signerRole: 'Diretor Acadêmico Quantum',
+    institutionName: 'Quantum',
+    primaryColor: '#7c3aed', // brand-600
+    displaySeal: true
+  },
   modules: [
     {
       id: 'm_1',
