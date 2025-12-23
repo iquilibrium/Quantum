@@ -101,10 +101,9 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
 
   const handleManualComplete = () => {
     // Alteração: O botão não conclui mais a aula se não estiver feita.
-    // Ele redireciona para o Quiz.
+    // Ele redireciona para o Quiz SEM mostrar alerta.
     if (!isLessonCompleted) {
       setActiveTab('quiz');
-      alert("Para concluir esta aula e avançar, responda corretamente a pergunta do Quiz.");
     } else {
       // Se já estiver completa, apenas avança
       if (!isCourseFinished) {
@@ -249,7 +248,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                             onClick={handleManualComplete} 
                             size="lg" 
                             variant={isLessonCompleted ? "secondary" : "primary"}
-                            className="flex items-center justify-center gap-2 shadow-lg w-full"
+                            className={`flex items-center justify-center gap-2 shadow-lg w-full ${isLessonCompleted ? 'animate-pulse hover:animate-none' : ''}`}
                           >
                               {isLessonCompleted ? "Próxima Aula" : "Responder Quiz para Avançar"}
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -388,7 +387,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                                                     </svg>
                                                 </Button>
                                              ) : (
-                                               <Button onClick={nextLesson} size="lg" className="bg-green-600 hover:bg-green-700 text-white shadow-green-200 shadow-lg">
+                                               <Button onClick={nextLesson} size="lg" className="bg-green-600 hover:bg-green-700 text-white shadow-green-200 shadow-lg animate-pulse hover:animate-none">
                                                   Próxima Aula <span className="ml-2">→</span>
                                                </Button>
                                              )}
