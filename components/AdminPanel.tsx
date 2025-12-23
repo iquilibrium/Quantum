@@ -39,8 +39,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   const handleCertChange = (field: keyof CertificateConfig, value: any) => {
     const updatedForm = { ...certForm, [field]: value };
     setCertForm(updatedForm);
-    // Atualiza o curso em tempo real para o preview funcionar, ou poderia ser num botão "Salvar"
+    // Atualiza o curso em tempo real para o preview funcionar
     onUpdateCourse({ ...course, certificateConfig: updatedForm });
+  };
+
+  const handleSaveCertificate = () => {
+    // Como o onUpdateCourse já atualiza o estado pai em tempo real, 
+    // este botão serve como confirmação visual e ponto de integração com Backend futuro.
+    onUpdateCourse({ ...course, certificateConfig: certForm });
+    alert("Configurações do certificado salvas com sucesso!");
   };
 
 
@@ -60,6 +67,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
           return m;
       });
       onUpdateCourse({ ...course, modules: newModules });
+  };
+
+  // --- MODULE REORDERING ---
+  const moveModuleUp = (index: number) => {
+    if (index === 0) return; // Já é o primeiro
+    const newModules = [...course.modules];
+    // Swap
+    const temp = newModules[index];
+    newModules[index] = newModules[index - 1];
+    newModules[index - 1] = temp;
+    onUpdateCourse({ ...course, modules: newModules });
+  };
+
+  const moveModuleDown = (index: number) => {
+    if (index === course.modules.length - 1) return; // Já é o último
+    const newModules = [...course.modules];
+    // Swap
+    const temp = newModules[index];
+    newModules[index] = newModules[index + 1];
+    newModules[index + 1] = temp;
+    onUpdateCourse({ ...course, modules: newModules });
   };
 
   const openModuleModal = (module?: Module) => {
@@ -311,11 +339,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
         {/* --- CONTENT TAB --- */}
         {activeTab === 'content' && (
            <div className="space-y-6 animate-fade-in">
-            {course.modules.map((module) => (
+            {course.modules.map((module, index) => (
               <div key={module.id} className={`bg-white dark:bg-slate-800 rounded-xl border overflow-hidden shadow-sm transition-all ${module.isActive ? 'border-slate-200 dark:border-slate-700' : 'border-slate-200 dark:border-slate-700 opacity-60 grayscale-[0.5]'}`}>
                 {/* Module Header */}
                 <div className="bg-slate-50 dark:bg-slate-700/50 p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700">
                   <div className="flex items-center gap-3">
+                     {/* Botões de Reordenação */}
+                     <div className="flex flex-col gap-0.5">
+                        <button 
+                          onClick={() => moveModuleUp(index)}
+                          disabled={index === 0}
+                          className="text-slate-400 hover:text-brand-600 dark:text-slate-500 dark:hover:text-brand-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Mover para cima"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                        </button>
+                        <button 
+                          onClick={() => moveModuleDown(index)}
+                          disabled={index === course.modules.length - 1}
+                          className="text-slate-400 hover:text-brand-600 dark:text-slate-500 dark:hover:text-brand-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Mover para baixo"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                     </div>
+
                      <div className={`p-2 rounded-lg shadow-sm transition-colors ${module.isActive ? 'bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400' : 'bg-slate-200 dark:bg-slate-600 text-slate-400 dark:text-slate-500'}`}>
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                      </div>
@@ -485,6 +533,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                                 </div>
                              </div>
                         </div>
+                    </div>
+
+                    {/* Botão de Salvar Alterações */}
+                    <div className="flex justify-end pt-2">
+                        <Button 
+                            onClick={handleSaveCertificate} 
+                            size="lg" 
+                            className="w-full shadow-lg"
+                        >
+                            Salvar Alterações
+                        </Button>
                     </div>
                 </div>
 
