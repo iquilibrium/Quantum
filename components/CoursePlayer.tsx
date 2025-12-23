@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Course, Lesson, Module } from '../types';
 import { Button } from './Button';
@@ -250,6 +251,43 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                       <div className="whitespace-pre-line text-slate-600 dark:text-slate-300 leading-relaxed text-base">
                         {activeLesson.content}
                       </div>
+
+                      {/* --- MATERIALS SECTION --- */}
+                      {activeLesson.materials && activeLesson.materials.length > 0 && (
+                        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
+                           <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                             <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                             Materiais Complementares
+                           </h4>
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {activeLesson.materials.map((material) => (
+                                <a 
+                                  key={material.id} 
+                                  href={material.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="group flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-300 dark:hover:border-brand-500 hover:shadow-md transition-all bg-slate-50 dark:bg-slate-700/30 no-underline"
+                                >
+                                   <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-600 flex items-center justify-center text-brand-600 dark:text-brand-400 shadow-sm group-hover:scale-110 transition-transform">
+                                      {material.type === 'pdf' ? (
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                      ) : material.type === 'video' ? (
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                      ) : (
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                      )}
+                                   </div>
+                                   <div className="flex-1">
+                                      <h5 className="font-bold text-slate-800 dark:text-white text-sm m-0 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{material.title}</h5>
+                                      <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">{material.type}</span>
+                                   </div>
+                                   <svg className="w-4 h-4 text-slate-300 dark:text-slate-500 group-hover:text-brand-500 dark:group-hover:text-brand-400 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                </a>
+                              ))}
+                           </div>
+                        </div>
+                      )}
+
                     </div>
 
                     {/* Botão de Conclusão Manual no final do conteúdo */}

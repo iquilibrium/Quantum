@@ -26,6 +26,13 @@ export interface Quiz {
   options: QuizOption[];
 }
 
+export interface Material {
+  id: string;
+  title: string;
+  url: string;
+  type: 'pdf' | 'link' | 'image' | 'video';
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -33,6 +40,7 @@ export interface Lesson {
   videoId: string; // YouTube ID
   duration: string;
   content: string; // Markdown or HTML string
+  materials: Material[]; // Novo campo
   quiz: Quiz;
   isActive: boolean; // Novo campo
 }

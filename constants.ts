@@ -95,6 +95,7 @@ Cada pessoa percebe o mundo através de filtros como crenças, emoções, experi
 
 A ciência moderna mostra que aquilo que observamos não é apenas o objeto em si, mas o resultado da interação entre o observador e o observado. Compreender a realidade começa por compreender como percebemos.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_1_1',
             question: 'O que mais influencia a forma como percebemos a realidade?',
@@ -118,6 +119,7 @@ Esse modelo funcionou muito bem para fenômenos grandes, mas começou a falhar a
 
 No nível dos átomos e partículas, os fenômenos não seguem regras rígidas e totalmente previsíveis. Isso mostra que o pensamento clássico é útil, mas limitado.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_1_2',
             question: 'O pensamento clássico vê o universo como:',
@@ -141,6 +143,7 @@ Isso não significa que a mente cria tudo do nada, mas que a observação interf
 
 No cotidiano, isso é percebido quando nossas expectativas e emoções influenciam a forma como interpretamos os acontecimentos. A realidade é construída pela interação entre o que acontece e como interpretamos.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_1_3',
             question: 'Na visão moderna, qual é o papel do observador?',
@@ -162,6 +165,7 @@ No cotidiano, isso é percebido quando nossas expectativas e emoções influenci
 
 O curso Quantum não pede crença cega, mas observação, reflexão e abertura para novos modelos de compreensão da realidade. Assim como aprender uma nova habilidade, compreender o Quantum exige prática mental.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_1_4',
             question: 'Qual atitude é mais adequada para aprender conceitos quânticos?',
@@ -192,6 +196,7 @@ O curso Quantum não pede crença cega, mas observação, reflexão e abertura p
 
 Ela surgiu quando a física clássica não conseguiu explicar certos fenômenos observados na natureza. É uma das teorias mais testadas da ciência e introduz a ideia de probabilidade como parte fundamental da realidade.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_2_1',
             question: 'Por que a Mecânica Quântica surgiu?',
@@ -212,6 +217,7 @@ Ela surgiu quando a física clássica não conseguiu explicar certos fenômenos 
 
 Isso demonstra que o comportamento da luz depende do contexto da observação. Não existe uma definição fixa e imutável isolada do experimento.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_2_2',
             question: 'O comportamento da luz (onda ou partícula) depende de quê?',
@@ -232,6 +238,7 @@ Isso demonstra que o comportamento da luz depende do contexto da observação. N
 
 Isso evidencia que o ato de medir interfere no sistema observado, alterando seu comportamento fundamental.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_2_3',
             question: 'Sem observação direta no experimento, a partícula se comporta como:',
@@ -252,6 +259,7 @@ Isso evidencia que o ato de medir interfere no sistema observado, alterando seu 
 
 O princípio da incerteza mostra que a natureza possui limites fundamentais de precisão. Isso não é causado por falhas tecnológicas de medição, mas pela própria estrutura da realidade, que é probabilística em sua base.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_2_4',
             question: 'Os resultados na mecânica quântica são:',
@@ -272,6 +280,7 @@ O princípio da incerteza mostra que a natureza possui limites fundamentais de p
 
 Ela mostra que a realidade é mais complexa do que o modelo clássico e que o observador influencia o sistema. O foco do curso é a clareza e profundidade, evitando o sensacionalismo mágico que muitas vezes distorce a ciência.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_2_5',
             question: 'A Mecânica Quântica afirma que pensamentos criam a matéria instantaneamente?',
@@ -301,6 +310,7 @@ Ela mostra que a realidade é mais complexa do que o modelo clássico e que o ob
 
 A vibração é uma propriedade fundamental da matéria e da energia.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_3_1',
             question: 'Segundo a ciência, o que acontece com toda matéria no universo?',
@@ -321,6 +331,7 @@ A vibração é uma propriedade fundamental da matéria e da energia.`,
 
 A ressonância explica por que certos ambientes, músicas, ideias ou pessoas nos afetam mais do que outros. Estamos "sintonizando" com aquela frequência específica, amplificando a troca de informação e energia.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_3_2',
             question: 'O que é Ressonância?',
@@ -343,6 +354,7 @@ No espectro das emoções humanas, o medo, a culpa e a vergonha vibram em frequ�
 
 Mudar sua realidade não é apenas mudar ações físicas, mas alterar o estado vibracional de onde essas ações partem.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_3_3',
             question: 'Qual é a diferença entre medo e alegria em termos físicos?',
@@ -372,6 +384,7 @@ Mudar sua realidade não é apenas mudar ações físicas, mas alterar o estado 
 
 O universo, em sua essência, é uma criação mental do Todo.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_4_1',
             question: 'O Princípio do Mentalismo afirma que:',
@@ -392,6 +405,7 @@ O universo, em sua essência, é uma criação mental do Todo.`,
 
 Ao estudar o átomo (microcosmo), podemos entender o sistema solar (macrocosmo). Ao entender nossas emoções internas, podemos entender nossos resultados externos. Há uma harmonia e correlação entre os planos de existência.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_4_2',
             question: 'A Lei da Correspondência indica que:',
@@ -412,6 +426,7 @@ Ao estudar o átomo (microcosmo), podemos entender o sistema solar (macrocosmo).
 
 Quanto mais alta a vibração, mais elevada a posição na escala.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_4_3',
             question: 'O Princípio da Vibração explica as diferenças entre matéria e espírito como:',
@@ -432,6 +447,7 @@ Quanto mais alta a vibração, mais elevada a posição na escala.`,
 
 A arte da polarização mental permite transmutar um estado mental em seu oposto, alterando sua vibração.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_4_4',
             question: 'Segundo a Polaridade, o que são "quente" e "frio"?',
@@ -452,6 +468,7 @@ A arte da polarização mental permite transmutar um estado mental em seu oposto
 
 A medida do movimento à direita é a medida do movimento à esquerda. O sábio aprende a "neutralizar" o ritmo, elevando-se acima da oscilação para não ser arrastado pelo pêndulo emocional.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_4_5',
             question: 'Como o Princípio do Ritmo se manifesta?',
@@ -472,6 +489,7 @@ A medida do movimento à direita é a medida do movimento à esquerda. O sábio 
 
 Para se tornar mestre da própria vida, deve-se deixar de ser um "efeito" das circunstâncias e tornar-se uma "causa" consciente.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_4_6',
             question: 'O que é o "acaso" segundo o Hermetismo?',
@@ -492,6 +510,7 @@ Para se tornar mestre da própria vida, deve-se deixar de ser um "efeito" das ci
 
 Nada pode ser criado sem a união dos princípios Masculino (projetivo) e Feminino (receptivo), tanto na natureza quanto na mente humana.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_4_7',
             question: 'O Princípio de Gênero é responsável por:',
@@ -521,6 +540,7 @@ Nada pode ser criado sem a união dos princípios Masculino (projetivo) e Femini
 
 Não se trata de substituir um pelo outro, mas de perceber como ambos oferecem linguagens diferentes para descrever os mesmos mecanismos da realidade. A ciência mede o externo; o hermetismo explica o princípio interno. Juntos, oferecem um mapa completo.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_5_1',
             question: 'O curso Quantum busca integrar:',
@@ -550,6 +570,7 @@ Não se trata de substituir um pelo outro, mas de perceber como ambos oferecem l
 
 O objetivo final não é decorar conceitos, mas expandir sua compreensão da realidade de forma prática, permitindo que você navegue pela vida com mais consciência e menos automatismo.`,
           isActive: true,
+          materials: [],
           quiz: {
             id: 'q_6_1',
             question: 'O objetivo final do curso é:',

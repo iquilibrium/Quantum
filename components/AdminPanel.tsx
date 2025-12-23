@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Course, Module, Lesson, QuizOption, User, CertificateConfig } from '../types';
+import { Course, Module, Lesson, QuizOption, User, CertificateConfig, Material } from '../types';
 import { Button } from './Button';
 import { Certificate } from './Certificate'; // Import para Preview
 
@@ -22,6 +22,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
   const [activeModuleForLesson, setActiveModuleForLesson] = useState<string | null>(null);
+  
+  // New Material Inputs State
+  const [newMaterial, setNewMaterial] = useState<Partial<Material>>({ title: '', url: '', type: 'link' });
 
   // --- CERTIFICATE MANAGEMENT STATES ---
   const [showSaveSuccess, setShowSaveSuccess] = useState(false); // Estado para notificação
@@ -133,12 +136,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
 
   const openLessonModal = (moduleId: string, lesson?: Lesson) => {
     setActiveModuleForLesson(moduleId);
+    setNewMaterial({ title: '', url: '', type: 'link' }); // Reset new material form
+    
     if (lesson) {
       setLessonForm(JSON.parse(JSON.stringify(lesson)));
       setEditingLessonId(lesson.id);
     } else {
       setLessonForm({
         title: '', description: '', videoId: '', duration: '', content: '', isActive: true,
+        materials: [],
         quiz: { id: `q_${Date.now()}`, question: '', options: [{ id: 'opt_1', text: '', isCorrect: false }, { id: 'opt_2', text: '', isCorrect: false }] }
       });
       setEditingLessonId(null);
@@ -152,11 +158,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     const moduleIndex = newModules.findIndex(m => m.id === activeModuleForLesson);
     if (moduleIndex === -1) return;
 
+    // Ensure materials array exists
+    const lessonToSave = {
+        ...lessonForm,
+        materials: lessonForm.materials || []
+    } as Lesson;
+
     if (editingLessonId) {
-      const lessons = newModules[moduleIndex].lessons.map(l => l.id === editingLessonId ? { ...l, ...lessonForm } as Lesson : l);
+      const lessons = newModules[moduleIndex].lessons.map(l => l.id === editingLessonId ? lessonToSave : l);
       newModules[moduleIndex] = { ...newModules[moduleIndex], lessons };
     } else {
-      const newLesson: Lesson = { ...(lessonForm as Lesson), id: `l_${Date.now()}` };
+      const newLesson: Lesson = { ...lessonToSave, id: `l_${Date.now()}` };
       newModules[moduleIndex].lessons.push(newLesson);
     }
     onUpdateCourse({ ...course, modules: newModules });
@@ -170,6 +182,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
       newModules[modIdx].lessons = newModules[modIdx].lessons.filter(l => l.id !== lessonId);
       onUpdateCourse({ ...course, modules: newModules });
     }
+  };
+
+  // --- MATERIAL HELPERS ---
+  const addMaterial = () => {
+    if (!newMaterial.title || !newMaterial.url) return;
+    const materialToAdd: Material = {
+        id: `mat_${Date.now()}`,
+        title: newMaterial.title,
+        url: newMaterial.url,
+        type: newMaterial.type as 'link' | 'pdf' | 'video' | 'image'
+    };
+    
+    setLessonForm({
+        ...lessonForm,
+        materials: [...(lessonForm.materials || []), materialToAdd]
+    });
+    setNewMaterial({ title: '', url: '', type: 'link' });
+  };
+
+  const removeMaterial = (materialId: string) => {
+      setLessonForm({
+          ...lessonForm,
+          materials: (lessonForm.materials || []).filter(m => m.id !== materialId)
+      });
   };
 
   // --- QUIZ HELPERS ---
@@ -677,6 +713,70 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                       value={lessonForm.content}
                       onChange={e => setLessonForm({...lessonForm, content: e.target.value})}
                     />
+                 </div>
+                 
+                 {/* Material Complementar Section */}
+                 <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <h4 className="font-bold text-slate-800 dark:text-white mb-3 text-sm">Materiais Complementares</h4>
+                    
+                    {/* Lista de Materiais */}
+                    <div className="space-y-2 mb-3">
+                        {(lessonForm.materials || []).map((mat) => (
+                            <div key={mat.id} className="flex items-center justify-between bg-white dark:bg-slate-700 p-2 rounded border border-slate-200 dark:border-slate-600">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <span className="text-xs uppercase font-bold bg-slate-100 dark:bg-slate-600 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-300">
+                                        {mat.type}
+                                    </span>
+                                    <span className="text-sm text-slate-700 dark:text-slate-200 truncate">{mat.title}</span>
+                                </div>
+                                <button onClick={() => removeMaterial(mat.id)} className="text-slate-400 hover:text-red-500">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ))}
+                        {(lessonForm.materials || []).length === 0 && <p className="text-xs text-slate-400 italic">Nenhum material adicionado.</p>}
+                    </div>
+                    
+                    {/* Adicionar Novo Material */}
+                    <div className="grid grid-cols-12 gap-2">
+                        <div className="col-span-4">
+                            <input 
+                                placeholder="Título"
+                                className="w-full text-xs px-2 py-1.5 rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                value={newMaterial.title}
+                                onChange={e => setNewMaterial({...newMaterial, title: e.target.value})}
+                            />
+                        </div>
+                        <div className="col-span-4">
+                            <input 
+                                placeholder="URL"
+                                className="w-full text-xs px-2 py-1.5 rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                value={newMaterial.url}
+                                onChange={e => setNewMaterial({...newMaterial, url: e.target.value})}
+                            />
+                        </div>
+                        <div className="col-span-3">
+                            <select 
+                                className="w-full text-xs px-2 py-1.5 rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                value={newMaterial.type}
+                                onChange={e => setNewMaterial({...newMaterial, type: e.target.value as any})}
+                            >
+                                <option value="link">Link</option>
+                                <option value="pdf">PDF</option>
+                                <option value="image">Imagem</option>
+                                <option value="video">Vídeo</option>
+                            </select>
+                        </div>
+                        <div className="col-span-1">
+                             <button 
+                                onClick={addMaterial}
+                                className="w-full h-full bg-brand-600 text-white rounded flex items-center justify-center hover:bg-brand-700"
+                                title="Adicionar Material"
+                             >
+                                 +
+                             </button>
+                        </div>
+                    </div>
                  </div>
               </div>
 
