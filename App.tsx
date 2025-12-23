@@ -40,6 +40,10 @@ const App: React.FC = () => {
     }
   };
 
+  const handleUpdateUser = (data: Partial<User>) => {
+    setUser(prev => ({ ...prev, ...data }));
+  };
+
   const handleSelectLessonFromSidebar = (mIndex: number, lIndex: number) => {
     setActiveLessonCoords({ mIndex, lIndex });
     setCurrentView('course');
@@ -159,6 +163,7 @@ const App: React.FC = () => {
               user={user}
               course={COURSE_DATA}
               onBack={() => setCurrentView('dashboard')}
+              onUpdateUser={handleUpdateUser}
             />
           </div>
         )}

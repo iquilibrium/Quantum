@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Course } from '../types';
 import { Button } from './Button';
 
@@ -6,9 +6,31 @@ interface ProfileProps {
   user: User;
   course: Course;
   onBack: () => void;
+  onUpdateUser: (data: Partial<User>) => void;
 }
 
-export const Profile: React.FC<ProfileProps> = ({ user, course, onBack }) => {
+export const Profile: React.FC<ProfileProps> = ({ user, course, onBack, onUpdateUser }) => {
+  // Estados para edição
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email
+  });
+
+  useEffect(() => {
+    setFormData({ name: user.name, email: user.email });
+  }, [user]);
+
+  const handleSave = () => {
+    onUpdateUser(formData);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setFormData({ name: user.name, email: user.email });
+    setIsEditing(false);
+  };
+
   // Calcular estatísticas reais baseadas nas aulas completadas
   const totalLessons = course.modules.reduce((acc, mod) => acc + mod.lessons.length, 0);
   const completedCount = user.completedLessons.length;
@@ -47,8 +69,8 @@ export const Profile: React.FC<ProfileProps> = ({ user, course, onBack }) => {
           </div>
           
           <div className="flex-1 text-center md:text-left mb-2">
-            <h1 className="text-3xl font-bold text-slate-900">{user.name}</h1>
-            <p className="text-slate-500">{user.email}</p>
+            <h1 className="text-3xl font-bold text-slate-900">{formData.name}</h1>
+            <p className="text-slate-500">{formData.email}</p>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-3">
               <span className="bg-brand-100 text-brand-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border border-brand-200">
                 {user.role === 'student' ? 'Estudante Iniciado' : 'Coordenador'}
@@ -61,7 +83,20 @@ export const Profile: React.FC<ProfileProps> = ({ user, course, onBack }) => {
           </div>
 
           <div className="flex gap-3">
-             <Button variant="outline">Editar Perfil</Button>
+             {isEditing ? (
+               <div className="flex gap-2 animate-fade-in">
+                 <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
+                    Salvar
+                 </Button>
+                 <Button variant="outline" onClick={handleCancel}>
+                    Cancelar
+                 </Button>
+               </div>
+             ) : (
+               <Button variant="outline" onClick={() => setIsEditing(true)}>
+                 Editar Perfil
+               </Button>
+             )}
           </div>
         </div>
 
@@ -139,24 +174,47 @@ export const Profile: React.FC<ProfileProps> = ({ user, course, onBack }) => {
           {/* Coluna Direita - Detalhes e Histórico */}
           <div className="lg:col-span-2 space-y-8">
              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 className="font-bold text-slate-900 mb-6 text-lg">Dados Pessoais</h3>
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-bold text-slate-900 text-lg">Dados Pessoais</h3>
+                    {isEditing && <span className="text-xs text-brand-600 font-medium animate-pulse">Modo de Edição Ativo</span>}
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <div>
                       <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nome Completo</label>
-                      <input type="text" value={user.name} readOnly className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 text-sm focus:outline-none" />
+                      <input 
+                        type="text" 
+                        value={formData.name} 
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        readOnly={!isEditing}
+                        className={`w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-all duration-200 ${
+                            isEditing 
+                            ? 'bg-white border border-brand-300 ring-2 ring-brand-100 text-slate-900' 
+                            : 'bg-slate-50 border border-slate-200 text-slate-700'
+                        }`} 
+                      />
                    </div>
                    <div>
                       <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email</label>
-                      <input type="text" value={user.email} readOnly className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 text-sm focus:outline-none" />
+                      <input 
+                        type="text" 
+                        value={formData.email} 
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        readOnly={!isEditing}
+                        className={`w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none transition-all duration-200 ${
+                            isEditing 
+                            ? 'bg-white border border-brand-300 ring-2 ring-brand-100 text-slate-900' 
+                            : 'bg-slate-50 border border-slate-200 text-slate-700'
+                        }`} 
+                      />
                    </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Data de Inscrição</label>
-                      <input type="text" value="12/08/2023" readOnly className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 text-sm focus:outline-none" />
+                      <input type="text" value="12/08/2023" readOnly className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-500 text-sm focus:outline-none cursor-not-allowed" />
                    </div>
                    <div>
                       <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Plano Atual</label>
-                      <input type="text" value="Quantum Pro (Vitalício)" readOnly className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-brand-700 font-medium text-sm focus:outline-none" />
+                      <input type="text" value="Quantum Pro (Vitalício)" readOnly className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-brand-700 font-medium text-sm focus:outline-none cursor-not-allowed" />
                    </div>
                 </div>
              </div>
