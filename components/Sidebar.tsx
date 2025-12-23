@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ViewState, User, Course } from '../types';
 import { Button } from './Button';
@@ -133,64 +134,77 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </h3>
               
               <div className="space-y-6">
-                {course.modules.map((module, mIdx) => (
-                  <div key={module.id} className="space-y-1">
-                    {/* Module Header */}
-                    <div className={`px-2 text-sm font-bold ${module.isLocked ? 'text-slate-400 dark:text-slate-600' : 'text-slate-800 dark:text-slate-200'}`}>
-                      {module.title}
-                    </div>
-                    
-                    {/* Lessons List */}
-                    <div className="space-y-0.5 relative pl-2">
-                      {/* Vertical line for tree structure */}
-                      <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-slate-100 dark:bg-slate-700"></div>
+                {course.modules.map((module, mIdx) => {
+                  // Se o módulo estiver inativo e o usuário não for coordenador, não renderiza
+                  if (!module.isActive && user.role !== 'coordinator') return null;
 
-                      {module.lessons.map((lesson, lIdx) => {
-                        const isCompleted = user.completedLessons.includes(lesson.id);
-                        
-                        // Check if locked logic
-                        let isLocked = module.isLocked;
-                        if (!isLocked) {
-                          if (lIdx === 0 && mIdx === 0) {
-                            isLocked = false;
-                          } else if (lIdx > 0) {
-                            const prevLessonId = module.lessons[lIdx - 1].id;
-                            if (!user.completedLessons.includes(prevLessonId)) isLocked = true;
-                          } else if (mIdx > 0) {
-                            const prevModule = course.modules[mIdx - 1];
-                            const lastLessonPrevModule = prevModule.lessons[prevModule.lessons.length - 1];
-                            if (!user.completedLessons.includes(lastLessonPrevModule.id)) isLocked = true;
-                          }
-                        }
-
-                        return (
-                          <button
-                            key={lesson.id}
-                            disabled={isLocked}
-                            onClick={() => {
-                              onSelectLesson(mIdx, lIdx);
-                              onClose(); // Auto-close menu on mobile selection
-                            }}
-                            className={`
-                              relative w-full flex items-start gap-2.5 px-3 py-2 text-left rounded-md transition-all group ml-1
-                              ${isLocked 
-                                ? 'opacity-60 cursor-not-allowed' 
-                                : 'hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer'
-                              }
-                            `}
-                          >
-                            <div className="mt-0.5">
-                              {isCompleted ? <CheckCircleIcon /> : (isLocked ? <LockIcon /> : <PlayIcon />)}
+                  return (
+                    <div key={module.id} className={`space-y-1 ${!module.isActive ? 'opacity-50 grayscale' : ''}`}>
+                        {/* Module Header */}
+                        <div className="flex items-center justify-between px-2">
+                            <div className={`text-sm font-bold ${module.isLocked ? 'text-slate-400 dark:text-slate-600' : 'text-slate-800 dark:text-slate-200'}`}>
+                              {module.title}
                             </div>
-                            <span className={`text-xs leading-relaxed ${isCompleted ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400 font-medium group-hover:text-brand-700 dark:group-hover:text-brand-300'}`}>
-                              {lesson.title}
-                            </span>
-                          </button>
-                        );
-                      })}
+                            {!module.isActive && <span className="text-[10px] uppercase bg-slate-200 dark:bg-slate-700 text-slate-500 px-1 rounded">Inativo</span>}
+                        </div>
+                        
+                        {/* Lessons List */}
+                        <div className="space-y-0.5 relative pl-2">
+                        {/* Vertical line for tree structure */}
+                        <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-slate-100 dark:bg-slate-700"></div>
+
+                        {module.lessons.map((lesson, lIdx) => {
+                            // Se a aula estiver inativa e o usuário não for coordenador, não renderiza
+                            if (!lesson.isActive && user.role !== 'coordinator') return null;
+
+                            const isCompleted = user.completedLessons.includes(lesson.id);
+                            
+                            // Check if locked logic
+                            let isLocked = module.isLocked;
+                            if (!isLocked) {
+                              if (lIdx === 0 && mIdx === 0) {
+                                isLocked = false;
+                              } else if (lIdx > 0) {
+                                const prevLessonId = module.lessons[lIdx - 1].id;
+                                if (!user.completedLessons.includes(prevLessonId)) isLocked = true;
+                              } else if (mIdx > 0) {
+                                const prevModule = course.modules[mIdx - 1];
+                                const lastLessonPrevModule = prevModule.lessons[prevModule.lessons.length - 1];
+                                if (!user.completedLessons.includes(lastLessonPrevModule.id)) isLocked = true;
+                              }
+                            }
+
+                            return (
+                            <button
+                                key={lesson.id}
+                                disabled={isLocked}
+                                onClick={() => {
+                                onSelectLesson(mIdx, lIdx);
+                                onClose(); // Auto-close menu on mobile selection
+                                }}
+                                className={`
+                                relative w-full flex items-start gap-2.5 px-3 py-2 text-left rounded-md transition-all group ml-1
+                                ${!lesson.isActive ? 'opacity-50' : ''}
+                                ${isLocked 
+                                    ? 'opacity-60 cursor-not-allowed' 
+                                    : 'hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer'
+                                }
+                                `}
+                            >
+                                <div className="mt-0.5">
+                                {isCompleted ? <CheckCircleIcon /> : (isLocked ? <LockIcon /> : <PlayIcon />)}
+                                </div>
+                                <span className={`text-xs leading-relaxed ${isCompleted ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400 font-medium group-hover:text-brand-700 dark:group-hover:text-brand-300'}`}>
+                                {lesson.title}
+                                {!lesson.isActive && <span className="ml-2 text-[9px] uppercase bg-slate-200 dark:bg-slate-700 text-slate-500 px-1 rounded">Off</span>}
+                                </span>
+                            </button>
+                            );
+                        })}
+                        </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

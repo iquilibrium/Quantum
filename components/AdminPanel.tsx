@@ -1,34 +1,51 @@
 
 import React, { useState } from 'react';
-import { Course, Module, Lesson, QuizOption } from '../types';
+import { Course, Module, Lesson, QuizOption, User } from '../types';
 import { Button } from './Button';
 
 interface AdminPanelProps {
   course: Course;
+  students: User[]; // Lista de todos os alunos
   onUpdateCourse: (updatedCourse: Course) => void;
+  onUpdateStudent: (updatedStudent: User) => void; // Função para ativar/desativar aluno
 }
 
-export const AdminPanel: React.FC<AdminPanelProps> = ({ course, onUpdateCourse }) => {
+export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpdateCourse, onUpdateStudent }) => {
+  const [activeTab, setActiveTab] = useState<'content' | 'students'>('students');
+
+  // --- CONTENT MANAGEMENT STATES ---
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
-  
-  // Estados para formulários
   const [moduleForm, setModuleForm] = useState<Partial<Module>>({});
   const [lessonForm, setLessonForm] = useState<Partial<Lesson>>({});
-  
-  // Controle de UI
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
   const [activeModuleForLesson, setActiveModuleForLesson] = useState<string | null>(null);
 
-  // --- MODULE ACTIONS ---
+  // --- CONTENT HELPERS ---
+
+  const toggleModuleStatus = (module: Module) => {
+      const newModules = course.modules.map(m => m.id === module.id ? { ...m, isActive: !m.isActive } : m);
+      onUpdateCourse({ ...course, modules: newModules });
+  };
+
+  const toggleLessonStatus = (moduleId: string, lesson: Lesson) => {
+      const newModules = course.modules.map(m => {
+          if (m.id === moduleId) {
+              const newLessons = m.lessons.map(l => l.id === lesson.id ? { ...l, isActive: !l.isActive } : l);
+              return { ...m, lessons: newLessons };
+          }
+          return m;
+      });
+      onUpdateCourse({ ...course, modules: newModules });
+  };
 
   const openModuleModal = (module?: Module) => {
     if (module) {
       setModuleForm({ ...module });
       setEditingModuleId(module.id);
     } else {
-      setModuleForm({ title: '', description: '', isLocked: false });
+      setModuleForm({ title: '', description: '', isLocked: false, isActive: true });
       setEditingModuleId(null);
     }
     setIsModuleModalOpen(true);
@@ -36,24 +53,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, onUpdateCourse }
 
   const saveModule = () => {
     if (!moduleForm.title) return alert("Título é obrigatório");
-    
     let newModules = [...course.modules];
-
     if (editingModuleId) {
-      // Edit
       newModules = newModules.map(m => m.id === editingModuleId ? { ...m, ...moduleForm } as Module : m);
     } else {
-      // Create
       const newModule: Module = {
         id: `m_${Date.now()}`,
         title: moduleForm.title || '',
         description: moduleForm.description || '',
         isLocked: !!moduleForm.isLocked,
+        isActive: true,
         lessons: []
       };
       newModules.push(newModule);
     }
-
     onUpdateCourse({ ...course, modules: newModules });
     setIsModuleModalOpen(false);
   };
@@ -65,28 +78,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, onUpdateCourse }
     }
   };
 
-  // --- LESSON ACTIONS ---
-
   const openLessonModal = (moduleId: string, lesson?: Lesson) => {
     setActiveModuleForLesson(moduleId);
     if (lesson) {
-      setLessonForm(JSON.parse(JSON.stringify(lesson))); // Deep copy for quiz arrays
+      setLessonForm(JSON.parse(JSON.stringify(lesson)));
       setEditingLessonId(lesson.id);
     } else {
       setLessonForm({
-        title: '',
-        description: '',
-        videoId: '',
-        duration: '',
-        content: '',
-        quiz: {
-          id: `q_${Date.now()}`,
-          question: '',
-          options: [
-            { id: 'opt_1', text: '', isCorrect: false },
-            { id: 'opt_2', text: '', isCorrect: false }
-          ]
-        }
+        title: '', description: '', videoId: '', duration: '', content: '', isActive: true,
+        quiz: { id: `q_${Date.now()}`, question: '', options: [{ id: 'opt_1', text: '', isCorrect: false }, { id: 'opt_2', text: '', isCorrect: false }] }
       });
       setEditingLessonId(null);
     }
@@ -95,24 +95,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, onUpdateCourse }
 
   const saveLesson = () => {
     if (!lessonForm.title || !activeModuleForLesson) return alert("Título e Módulo são obrigatórios");
-
     const newModules = [...course.modules];
     const moduleIndex = newModules.findIndex(m => m.id === activeModuleForLesson);
     if (moduleIndex === -1) return;
 
     if (editingLessonId) {
-      // Edit
       const lessons = newModules[moduleIndex].lessons.map(l => l.id === editingLessonId ? { ...l, ...lessonForm } as Lesson : l);
       newModules[moduleIndex] = { ...newModules[moduleIndex], lessons };
     } else {
-      // Create
-      const newLesson: Lesson = {
-        ...(lessonForm as Lesson),
-        id: `l_${Date.now()}`
-      };
+      const newLesson: Lesson = { ...(lessonForm as Lesson), id: `l_${Date.now()}` };
       newModules[moduleIndex].lessons.push(newLesson);
     }
-
     onUpdateCourse({ ...course, modules: newModules });
     setIsLessonModalOpen(false);
   };
@@ -130,110 +123,255 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, onUpdateCourse }
   const handleOptionChange = (idx: number, field: keyof QuizOption, value: any) => {
     if (!lessonForm.quiz) return;
     const newOptions = [...lessonForm.quiz.options];
-    
-    if (field === 'isCorrect' && value === true) {
-      // Ensure only one is correct (optional logic, but good for single choice)
-      newOptions.forEach(o => o.isCorrect = false);
-    }
-    
+    if (field === 'isCorrect' && value === true) newOptions.forEach(o => o.isCorrect = false);
     newOptions[idx] = { ...newOptions[idx], [field]: value };
     setLessonForm({ ...lessonForm, quiz: { ...lessonForm.quiz, options: newOptions } });
   };
 
   const addQuizOption = () => {
     if (!lessonForm.quiz) return;
-    const newOption: QuizOption = { id: `opt_${Date.now()}`, text: '', isCorrect: false };
-    setLessonForm({ 
-      ...lessonForm, 
-      quiz: { 
-        ...lessonForm.quiz, 
-        options: [...lessonForm.quiz.options, newOption] 
-      } 
-    });
+    setLessonForm({ ...lessonForm, quiz: { ...lessonForm.quiz, options: [...lessonForm.quiz.options, { id: `opt_${Date.now()}`, text: '', isCorrect: false }] } });
   };
 
   const removeQuizOption = (idx: number) => {
     if (!lessonForm.quiz) return;
-    const newOptions = lessonForm.quiz.options.filter((_, i) => i !== idx);
-    setLessonForm({ ...lessonForm, quiz: { ...lessonForm.quiz, options: newOptions } });
+    setLessonForm({ ...lessonForm, quiz: { ...lessonForm.quiz, options: lessonForm.quiz.options.filter((_, i) => i !== idx) } });
   };
 
+  // --- STUDENT HELPERS ---
+  const toggleStudentActive = (student: User) => {
+      onUpdateStudent({ ...student, isActive: !student.isActive });
+  };
+
+  // --- STATS CALCULATION ---
+  const totalStudents = students.length;
+  const activeStudents = students.filter(s => s.isActive).length;
+  const totalXP = students.reduce((acc, s) => acc + s.points, 0);
+  const avgProgress = Math.round(students.reduce((acc, s) => acc + s.progress, 0) / (totalStudents || 1));
+
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <div>
-           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Painel Administrativo</h1>
-           <p className="text-slate-500 dark:text-slate-400">Gerenciamento do curso: {course.title}</p>
-        </div>
-        <Button onClick={() => openModuleModal()}>+ Novo Módulo</Button>
+    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 transition-colors">
+      
+      {/* Admin Header & Tabs */}
+      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex-shrink-0">
+         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+            <div>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Painel Administrativo</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Gerencie alunos, conteúdo e visualizações</p>
+            </div>
+            <div className="flex gap-2 mt-4 md:mt-0">
+               {activeTab === 'content' && <Button onClick={() => openModuleModal()}>+ Novo Módulo</Button>}
+            </div>
+         </div>
+         
+         <div className="flex gap-6 border-b border-slate-100 dark:border-slate-700 -mb-4">
+             <button 
+                onClick={() => setActiveTab('students')}
+                className={`pb-4 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'students' ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+             >
+                Alunos & Dashboard
+             </button>
+             <button 
+                onClick={() => setActiveTab('content')}
+                className={`pb-4 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'content' ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+             >
+                Gerenciar Conteúdo do Curso
+             </button>
+         </div>
       </div>
 
-      <div className="space-y-6">
-        {course.modules.map((module) => (
-          <div key={module.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm transition-colors">
-            {/* Module Header */}
-            <div className="bg-slate-50 dark:bg-slate-700/50 p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700">
-              <div className="flex items-center gap-3">
-                 <div className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
-                    <svg className="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+      <div className="flex-1 overflow-y-auto p-6 max-w-7xl mx-auto w-full">
+        
+        {/* --- STUDENTS TAB --- */}
+        {activeTab === 'students' && (
+           <div className="space-y-8 animate-fade-in">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                 <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs font-bold text-slate-500 uppercase">Total de Alunos</p>
+                    <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{totalStudents}</p>
                  </div>
-                 <div>
-                   <h3 className="font-bold text-slate-900 dark:text-white">{module.title}</h3>
-                   <p className="text-xs text-slate-500 dark:text-slate-400">{module.lessons.length} Aulas • {module.isLocked ? 'Bloqueado' : 'Liberado'}</p>
+                 <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs font-bold text-slate-500 uppercase">Alunos Ativos</p>
+                    <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">{activeStudents}</p>
+                 </div>
+                 <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs font-bold text-slate-500 uppercase">Média de Progresso</p>
+                    <p className="text-3xl font-bold text-brand-600 dark:text-brand-400 mt-1">{avgProgress}%</p>
+                 </div>
+                 <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <p className="text-xs font-bold text-slate-500 uppercase">XP Total Gerado</p>
+                    <p className="text-3xl font-bold text-amber-500 mt-1">{totalXP}</p>
                  </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => openModuleModal(module)} className="p-2 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors" title="Editar Módulo">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                </button>
-                <button onClick={() => deleteModule(module.id)} className="p-2 text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 transition-colors" title="Excluir Módulo">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
-              </div>
-            </div>
 
-            {/* Lessons List */}
-            <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-              {module.lessons.map((lesson) => (
-                 <div key={lesson.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
-                    <div className="flex items-center gap-4">
-                       <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-400">
-                         VIDEO
-                       </span>
-                       <div>
-                         <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{lesson.title}</h4>
-                         <span className="text-xs text-slate-400 dark:text-slate-500">ID: {lesson.videoId} • {lesson.duration}</span>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button size="sm" variant="ghost" onClick={() => openLessonModal(module.id, lesson)}>Editar</Button>
-                        <button onClick={() => deleteLesson(module.id, lesson.id)} className="text-red-400 hover:text-red-600 p-2">
-                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
+              {/* Students Table */}
+              <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                 <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                    <h3 className="font-bold text-slate-800 dark:text-white">Base de Alunos</h3>
                  </div>
-              ))}
-              <div className="p-3 bg-slate-50/50 dark:bg-slate-800 flex justify-center">
-                 <Button size="sm" variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-400" onClick={() => openLessonModal(module.id)}>
-                    + Adicionar Aula
-                 </Button>
+                 <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                       <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 font-medium">
+                          <tr>
+                             <th className="px-6 py-3">Aluno</th>
+                             <th className="px-6 py-3">Progresso</th>
+                             <th className="px-6 py-3">Nível</th>
+                             <th className="px-6 py-3">Último Acesso</th>
+                             <th className="px-6 py-3">Status</th>
+                             <th className="px-6 py-3 text-right">Ações</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                          {students.map(student => (
+                             <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors">
+                                <td className="px-6 py-4">
+                                   <div className="flex items-center gap-3">
+                                      <img src={student.avatarUrl} alt="" className="w-8 h-8 rounded-full bg-slate-200" />
+                                      <div>
+                                         <p className="font-bold text-slate-900 dark:text-white">{student.name}</p>
+                                         <p className="text-xs text-slate-500 dark:text-slate-400">{student.email}</p>
+                                      </div>
+                                   </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                   <div className="flex items-center gap-2">
+                                      <div className="w-24 h-1.5 bg-slate-100 dark:bg-slate-600 rounded-full overflow-hidden">
+                                         <div className="h-full bg-brand-500" style={{ width: `${student.progress}%` }}></div>
+                                      </div>
+                                      <span className="text-xs text-slate-600 dark:text-slate-300">{student.progress}%</span>
+                                   </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                   <span className="inline-block px-2 py-0.5 rounded text-xs font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                                      Lvl {student.level}
+                                   </span>
+                                </td>
+                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
+                                   {student.lastAccess || '-'}
+                                </td>
+                                <td className="px-6 py-4">
+                                   {student.isActive ? (
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                                         <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Ativo
+                                      </span>
+                                   ) : (
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+                                         <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Inativo
+                                      </span>
+                                   )}
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                   {student.role !== 'coordinator' && (
+                                       <button 
+                                         onClick={() => toggleStudentActive(student)}
+                                         className={`text-xs font-bold px-3 py-1.5 rounded border transition-colors ${student.isActive ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20' : 'border-green-200 text-green-600 hover:bg-green-50 dark:border-green-900/50 dark:text-green-400 dark:hover:bg-green-900/20'}`}
+                                       >
+                                          {student.isActive ? 'Bloquear Acesso' : 'Ativar Aluno'}
+                                       </button>
+                                   )}
+                                </td>
+                             </tr>
+                          ))}
+                       </tbody>
+                    </table>
+                 </div>
               </div>
-            </div>
-          </div>
-        ))}
+           </div>
+        )}
+
+        {/* --- CONTENT TAB --- */}
+        {activeTab === 'content' && (
+           <div className="space-y-6 animate-fade-in">
+            {course.modules.map((module) => (
+              <div key={module.id} className={`bg-white dark:bg-slate-800 rounded-xl border overflow-hidden shadow-sm transition-all ${module.isActive ? 'border-slate-200 dark:border-slate-700' : 'border-slate-200 dark:border-slate-700 opacity-60 grayscale-[0.5]'}`}>
+                {/* Module Header */}
+                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-3">
+                     <div className={`p-2 rounded-lg shadow-sm transition-colors ${module.isActive ? 'bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400' : 'bg-slate-200 dark:bg-slate-600 text-slate-400 dark:text-slate-500'}`}>
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                     </div>
+                     <div>
+                       <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          {module.title}
+                          {!module.isActive && <span className="text-[10px] bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-300 px-1.5 py-0.5 rounded uppercase">Inativo</span>}
+                       </h3>
+                       <p className="text-xs text-slate-500 dark:text-slate-400">{module.lessons.length} Aulas • {module.isLocked ? 'Trancado (Sequencial)' : 'Livre'}</p>
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Toggle Active Switch for Module */}
+                    <button 
+                        onClick={() => toggleModuleStatus(module)}
+                        title={module.isActive ? "Desativar Módulo" : "Ativar Módulo"}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${module.isActive ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                    >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${module.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                    
+                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-600 mx-2"></div>
+
+                    <button onClick={() => openModuleModal(module)} className="p-2 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors" title="Editar Módulo">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    </button>
+                    <button onClick={() => deleteModule(module.id)} className="p-2 text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 transition-colors" title="Excluir Módulo">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Lessons List */}
+                <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                  {module.lessons.map((lesson) => (
+                     <div key={lesson.id} className={`p-4 flex items-center justify-between transition-colors ${lesson.isActive ? 'hover:bg-slate-50 dark:hover:bg-slate-700/20' : 'bg-slate-50/50 dark:bg-slate-800/50 opacity-70'}`}>
+                        <div className="flex items-center gap-4">
+                           <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${lesson.isActive ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400' : 'bg-slate-200 dark:bg-slate-600 text-slate-400'}`}>
+                             {lesson.isActive ? 'VID' : 'OFF'}
+                           </span>
+                           <div>
+                             <h4 className={`text-sm font-semibold ${lesson.isActive ? 'text-slate-800 dark:text-slate-200' : 'text-slate-500 dark:text-slate-500 line-through'}`}>{lesson.title}</h4>
+                             <span className="text-xs text-slate-400 dark:text-slate-500">ID: {lesson.videoId} • {lesson.duration}</span>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => toggleLessonStatus(module.id, lesson)}
+                                title={lesson.isActive ? "Desativar Aula" : "Ativar Aula"}
+                                className={`text-xs font-medium px-2 py-1 rounded border ${lesson.isActive ? 'border-green-200 text-green-600 bg-green-50 dark:bg-green-900/20 dark:border-green-800' : 'border-slate-300 text-slate-500 bg-slate-100 dark:bg-slate-700 dark:border-slate-600'}`}
+                            >
+                                {lesson.isActive ? 'Ativa' : 'Inativa'}
+                            </button>
+                            <div className="w-px h-4 bg-slate-200 dark:bg-slate-600"></div>
+                            <Button size="sm" variant="ghost" onClick={() => openLessonModal(module.id, lesson)}>Editar</Button>
+                            <button onClick={() => deleteLesson(module.id, lesson.id)} className="text-red-400 hover:text-red-600 p-2">
+                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                     </div>
+                  ))}
+                  <div className="p-3 bg-slate-50/50 dark:bg-slate-800 flex justify-center">
+                     <Button size="sm" variant="outline" className="text-xs dark:border-slate-600 dark:text-slate-400" onClick={() => openLessonModal(module.id)}>
+                        + Adicionar Aula
+                     </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+           </div>
+        )}
       </div>
 
       {/* --- MODAL DE MÓDULO --- */}
       {isModuleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-scale-in">
             <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">{editingModuleId ? 'Editar Módulo' : 'Novo Módulo'}</h3>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Título</label>
                 <input 
-                  className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                  className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   value={moduleForm.title}
                   onChange={e => setModuleForm({...moduleForm, title: e.target.value})}
                 />
@@ -241,7 +379,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, onUpdateCourse }
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Descrição</label>
                 <input 
-                  className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                  className="w-full border rounded-lg px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   value={moduleForm.description}
                   onChange={e => setModuleForm({...moduleForm, description: e.target.value})}
                 />
@@ -252,9 +390,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, onUpdateCourse }
                   id="isLocked"
                   checked={moduleForm.isLocked}
                   onChange={e => setModuleForm({...moduleForm, isLocked: e.target.checked})}
-                  className="rounded border-slate-300"
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                 />
-                <label htmlFor="isLocked" className="text-sm text-slate-700 dark:text-slate-300">Bloquear Módulo (Requer anterior completo)</label>
+                <label htmlFor="isLocked" className="text-sm text-slate-700 dark:text-slate-300">Bloqueio Sequencial (Requer módulo anterior)</label>
               </div>
             </div>
 
@@ -268,8 +406,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, onUpdateCourse }
 
       {/* --- MODAL DE AULA --- */}
       {isLessonModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-2xl p-6 shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-2xl p-6 shadow-2xl my-8 border border-slate-200 dark:border-slate-700 animate-scale-in">
             <h3 className="text-xl font-bold mb-6 text-slate-900 dark:text-white">{editingLessonId ? 'Editar Aula' : 'Nova Aula'}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

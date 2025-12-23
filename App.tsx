@@ -7,7 +7,7 @@ import { CertificatePreview } from './components/CertificatePreview';
 import { Profile } from './components/Profile';
 import { AdminPanel } from './components/AdminPanel'; // Import AdminPanel
 import { ViewState, User, Course } from './types';
-import { MOCK_USER, COURSE_DATA } from './constants';
+import { MOCK_USER, MOCK_STUDENTS, COURSE_DATA } from './constants';
 import { Button } from './components/Button';
 
 const App: React.FC = () => {
@@ -15,22 +15,20 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   
   // INITIALIZE USER AS COORDINATOR FOR DEMO PURPOSES
-  // In a real app, this comes from DB based on login
   const [user, setUser] = useState<User>({
     ...MOCK_USER,
     role: 'coordinator' // Force admin role for this request
   });
+
+  // State for List of Students (Admin View)
+  const [students, setStudents] = useState<User[]>(MOCK_STUDENTS);
   
   // LIFT COURSE STATE
-  // Initialize with the constant data, but allow updates
   const [courseData, setCourseData] = useState<Course>(COURSE_DATA);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  // Theme State
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Initialize theme from system preference or local storage would go here
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -43,7 +41,6 @@ const App: React.FC = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
   
-  // State to track which lesson to open in the player
   const [activeLessonCoords, setActiveLessonCoords] = useState<{mIndex: number, lIndex: number} | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -58,7 +55,6 @@ const App: React.FC = () => {
   };
 
   const handleCompleteLesson = (lessonId: string) => {
-    // In a real app, this would call an API
     if (!user.completedLessons.includes(lessonId)) {
       setUser(prev => ({
         ...prev,
@@ -73,15 +69,18 @@ const App: React.FC = () => {
     setUser(prev => ({ ...prev, ...data }));
   };
 
-  // Handler for Admin Panel updates
   const handleUpdateCourse = (updatedCourse: Course) => {
     setCourseData(updatedCourse);
+  };
+
+  const handleUpdateStudent = (updatedStudent: User) => {
+    setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
   };
 
   const handleSelectLessonFromSidebar = (mIndex: number, lIndex: number) => {
     setActiveLessonCoords({ mIndex, lIndex });
     setCurrentView('course');
-    setIsMobileMenuOpen(false); // Ensure menu closes on mobile immediately
+    setIsMobileMenuOpen(false); 
   };
 
   if (!isAuthenticated) {
@@ -148,7 +147,7 @@ const App: React.FC = () => {
 
       <Sidebar 
         user={user} 
-        course={courseData} // Pass the state courseData instead of constant
+        course={courseData} 
         currentView={currentView} 
         onChangeView={setCurrentView} 
         onLogout={handleLogout}
@@ -164,7 +163,7 @@ const App: React.FC = () => {
           <div className="flex-1 overflow-y-auto">
              <Dashboard 
                 user={user} 
-                course={courseData} // Pass state
+                course={courseData} 
                 onResume={() => {
                   setActiveLessonCoords({ mIndex: 0, lIndex: 0 }); 
                   setCurrentView('course');
@@ -175,7 +174,7 @@ const App: React.FC = () => {
         
         {currentView === 'course' && (
           <CoursePlayer 
-            course={courseData} // Pass state
+            course={courseData} 
             completedLessons={user.completedLessons}
             onCompleteLesson={handleCompleteLesson}
             onBack={() => setCurrentView('dashboard')}
@@ -208,7 +207,9 @@ const App: React.FC = () => {
           <div className="flex-1 overflow-y-auto">
             <AdminPanel 
               course={courseData} 
+              students={students}
               onUpdateCourse={handleUpdateCourse} 
+              onUpdateStudent={handleUpdateStudent}
             />
           </div>
         )}

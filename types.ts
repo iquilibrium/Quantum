@@ -1,14 +1,17 @@
+
 export interface User {
   id: string;
   name: string;
   email: string;
   avatarUrl: string;
   role: 'student' | 'coordinator';
+  isActive: boolean; // Novo campo
   progress: number; // 0 to 100
   points: number;
   level: number;
   badges: string[];
   completedLessons: string[]; // Array of Lesson IDs
+  lastAccess?: string; // Para o dashboard
 }
 
 export interface QuizOption {
@@ -31,6 +34,7 @@ export interface Lesson {
   duration: string;
   content: string; // Markdown or HTML string
   quiz: Quiz;
+  isActive: boolean; // Novo campo
 }
 
 export interface Module {
@@ -39,6 +43,7 @@ export interface Module {
   description: string;
   lessons: Lesson[];
   isLocked: boolean;
+  isActive: boolean; // Novo campo
 }
 
 export interface Course {
