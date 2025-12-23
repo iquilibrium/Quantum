@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Course, Lesson, Module } from '../types';
 import { Button } from './Button';
 
@@ -26,6 +26,10 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
   const [activeTab, setActiveTab] = useState<'content' | 'notes' | 'quiz'>('content');
   const [noteContent, setNoteContent] = useState('');
   
+  // Note saving state
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'idle'>('idle');
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Quiz specific states
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -50,6 +54,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
     setSelectedOptionId(null);
     setIsCorrect(false);
     setNoteContent(''); 
+    setSaveStatus('idle');
   }, [activeLesson.id]);
 
   const handleLessonChange = (mIndex: number, lIndex: number) => {
@@ -110,6 +115,32 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
         nextLesson();
       }
     }
+  };
+
+  // Logic for Notes Auto-Save
+  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setNoteContent(newValue);
+    setSaveStatus('saving');
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    // Debounce save (simulate API call after 2 seconds of inactivity)
+    autoSaveTimerRef.current = setTimeout(() => {
+      setSaveStatus('saved');
+    }, 2000);
+  };
+
+  const handleManualSaveNotes = () => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    setSaveStatus('saving');
+    
+    // Simulate API request
+    setTimeout(() => {
+      setSaveStatus('saved');
+    }, 800);
   };
 
   return (
@@ -261,17 +292,58 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                 )}
 
                 {activeTab === 'notes' && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 h-full flex flex-col">
                     <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-slate-700">Anotações Pessoais</label>
-                        <span className="text-xs text-slate-400">Salvo automaticamente</span>
+                        <label className="text-sm font-bold text-slate-700">Caderno de Estudos</label>
+                        <div className="flex items-center gap-2 h-5">
+                            {saveStatus === 'saving' && (
+                                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 animate-pulse transition-opacity">
+                                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Salvando alterações...
+                                </span>
+                            )}
+                            {saveStatus === 'saved' && (
+                                <span className="flex items-center gap-1.5 text-xs font-medium text-slate-400 transition-opacity">
+                                    <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                    Salvo automaticamente
+                                </span>
+                            )}
+                        </div>
                     </div>
                     <textarea 
-                      className="w-full h-80 p-5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-slate-700 leading-relaxed shadow-sm transition-shadow"
+                      className="w-full flex-1 min-h-[320px] p-5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-slate-700 leading-relaxed shadow-sm transition-shadow"
                       placeholder="Escreva seus insights e reflexões sobre esta aula..."
                       value={noteContent}
-                      onChange={(e) => setNoteContent(e.target.value)}
+                      onChange={handleNoteChange}
                     ></textarea>
+                    
+                    <div className="flex justify-end pt-2 border-t border-slate-50 mt-2">
+                        <Button 
+                            onClick={handleManualSaveNotes} 
+                            disabled={saveStatus === 'saving' || (saveStatus === 'saved' && noteContent === '')}
+                            variant={saveStatus === 'saved' ? "outline" : "primary"}
+                            className="min-w-[160px] transition-all duration-300"
+                        >
+                            {saveStatus === 'saving' ? (
+                                <span className="flex items-center gap-2">
+                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Salvando...
+                                </span>
+                            ) : (
+                                saveStatus === 'saved' ? (
+                                    <span className="flex items-center gap-2 text-green-600">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                        Anotações Salvas
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                                        Salvar Anotações
+                                    </span>
+                                )
+                            )}
+                        </Button>
+                    </div>
                   </div>
                 )}
 
@@ -311,10 +383,11 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                               </svg>
                             );
                           } else {
-                            // Estilo para RESPOSTA INCORRETA (Vermelho)
-                            containerClass = "border-red-400 bg-red-50 ring-1 ring-red-400 shadow-sm";
-                            iconClass = "border-red-500 bg-red-500 text-white";
-                            textClass = "text-red-800 font-medium";
+                            // Estilo para RESPOSTA INCORRETA (Vermelho Intenso)
+                            // Aumentei a saturação e o ring para destacar
+                            containerClass = "border-red-500 bg-red-100 ring-2 ring-red-500 shadow-md transform scale-[1.01]";
+                            iconClass = "border-red-500 bg-red-600 text-white";
+                            textClass = "text-red-900 font-bold";
                             iconSvg = (
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -339,9 +412,16 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                             </div>
                             
                             {/* Texto da Opção */}
-                            <span className={`text-base md:text-lg transition-colors duration-200 ${textClass}`}>
+                            <span className={`text-base md:text-lg transition-colors duration-200 ${textClass} flex-1`}>
                               {option.text}
                             </span>
+
+                            {/* Badge Incorreto Explicito dentro do botão */}
+                            {isSelected && !option.isCorrect && (
+                                <span className="flex-shrink-0 text-[10px] md:text-xs font-bold text-red-600 bg-white border border-red-200 px-2 py-1 rounded shadow-sm uppercase tracking-wide animate-pulse">
+                                  Incorreto
+                                </span>
+                            )}
                           </button>
                         );
                       })}
