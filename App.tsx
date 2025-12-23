@@ -1,17 +1,30 @@
+
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { CoursePlayer } from './components/CoursePlayer';
 import { CertificatePreview } from './components/CertificatePreview';
 import { Profile } from './components/Profile';
-import { ViewState, User } from './types';
+import { AdminPanel } from './components/AdminPanel'; // Import AdminPanel
+import { ViewState, User, Course } from './types';
 import { MOCK_USER, COURSE_DATA } from './constants';
 import { Button } from './components/Button';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
-  const [user, setUser] = useState<User>(MOCK_USER);
+  
+  // INITIALIZE USER AS COORDINATOR FOR DEMO PURPOSES
+  // In a real app, this comes from DB based on login
+  const [user, setUser] = useState<User>({
+    ...MOCK_USER,
+    role: 'coordinator' // Force admin role for this request
+  });
+  
+  // LIFT COURSE STATE
+  // Initialize with the constant data, but allow updates
+  const [courseData, setCourseData] = useState<Course>(COURSE_DATA);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Theme State
@@ -58,6 +71,11 @@ const App: React.FC = () => {
 
   const handleUpdateUser = (data: Partial<User>) => {
     setUser(prev => ({ ...prev, ...data }));
+  };
+
+  // Handler for Admin Panel updates
+  const handleUpdateCourse = (updatedCourse: Course) => {
+    setCourseData(updatedCourse);
   };
 
   const handleSelectLessonFromSidebar = (mIndex: number, lIndex: number) => {
@@ -130,7 +148,7 @@ const App: React.FC = () => {
 
       <Sidebar 
         user={user} 
-        course={COURSE_DATA}
+        course={courseData} // Pass the state courseData instead of constant
         currentView={currentView} 
         onChangeView={setCurrentView} 
         onLogout={handleLogout}
@@ -146,7 +164,7 @@ const App: React.FC = () => {
           <div className="flex-1 overflow-y-auto">
              <Dashboard 
                 user={user} 
-                course={COURSE_DATA} 
+                course={courseData} // Pass state
                 onResume={() => {
                   setActiveLessonCoords({ mIndex: 0, lIndex: 0 }); 
                   setCurrentView('course');
@@ -157,7 +175,7 @@ const App: React.FC = () => {
         
         {currentView === 'course' && (
           <CoursePlayer 
-            course={COURSE_DATA}
+            course={courseData} // Pass state
             completedLessons={user.completedLessons}
             onCompleteLesson={handleCompleteLesson}
             onBack={() => setCurrentView('dashboard')}
@@ -170,7 +188,7 @@ const App: React.FC = () => {
         {currentView === 'certificate' && (
           <CertificatePreview 
             studentName={user.name}
-            courseTitle={COURSE_DATA.title}
+            courseTitle={courseData.title}
             onBack={() => setCurrentView('course')}
           />
         )}
@@ -179,7 +197,7 @@ const App: React.FC = () => {
           <div className="flex-1 overflow-y-auto">
             <Profile 
               user={user}
-              course={COURSE_DATA}
+              course={courseData}
               onBack={() => setCurrentView('dashboard')}
               onUpdateUser={handleUpdateUser}
             />
@@ -187,11 +205,11 @@ const App: React.FC = () => {
         )}
 
         {currentView === 'admin' && (
-          <div className="p-8 flex items-center justify-center h-full text-slate-400 flex-col gap-4">
-            <svg className="w-16 h-16 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <p>Área Administrativa restrita a coordenadores.</p>
+          <div className="flex-1 overflow-y-auto">
+            <AdminPanel 
+              course={courseData} 
+              onUpdateCourse={handleUpdateCourse} 
+            />
           </div>
         )}
       </main>
