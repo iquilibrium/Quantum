@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -38,7 +39,7 @@
     <style>
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #f8fafc;
+        /* Default background handled by tailwind classes in App */
       }
       /* Custom Scrollbar for sleek look */
       ::-webkit-scrollbar {
@@ -54,6 +55,14 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
       }
+      
+      /* Dark mode scrollbar */
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
     </style>
   <script type="importmap">
 {
@@ -67,7 +76,7 @@
 }
 </script>
 </head>
-  <body>
+  <body class="bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
   </body>

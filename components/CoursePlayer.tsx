@@ -144,24 +144,24 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white relative">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 relative transition-colors duration-200">
       {/* Top Bar */}
-      <div className="h-16 border-b border-slate-200 flex items-center px-4 md:px-6 justify-between flex-shrink-0 bg-white z-20">
+      <div className="h-16 border-b border-slate-200 dark:border-slate-700 flex items-center px-4 md:px-6 justify-between flex-shrink-0 bg-white dark:bg-slate-800 z-20">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors flex items-center gap-2">
+          <button onClick={onBack} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-500 dark:text-slate-400 transition-colors flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span className="text-sm font-medium hidden md:inline">Dashboard</span>
           </button>
-          <div className="border-l border-slate-200 pl-4 ml-2">
-            <h2 className="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-0.5">{activeModule.title}</h2>
-            <h1 className="text-sm font-bold text-slate-900 truncate max-w-xs md:max-w-md">{activeLesson.title}</h1>
+          <div className="border-l border-slate-200 dark:border-slate-700 pl-4 ml-2">
+            <h2 className="text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-0.5">{activeModule.title}</h2>
+            <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-xs md:max-w-md">{activeLesson.title}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
            {isLessonCompleted && (
-             <span className="flex items-center gap-1.5 text-green-700 bg-green-50 px-3 py-1 rounded-full text-xs font-bold border border-green-200 shadow-sm hidden sm:flex">
+             <span className="flex items-center gap-1.5 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded-full text-xs font-bold border border-green-200 dark:border-green-800 shadow-sm hidden sm:flex">
                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                Concluído
              </span>
@@ -171,11 +171,11 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
 
       <div className="flex-1 flex overflow-hidden">
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto bg-slate-50">
+        <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <div className="max-w-4xl mx-auto p-4 pb-24 md:p-8 md:pb-12">
             
             {/* Video Player */}
-            <div className="aspect-video w-full bg-slate-900 rounded-2xl overflow-hidden shadow-xl mb-8 ring-1 ring-black/5">
+            <div className="aspect-video w-full bg-slate-900 rounded-2xl overflow-hidden shadow-xl mb-8 ring-1 ring-black/5 dark:ring-white/10">
               <iframe 
                 width="100%" 
                 height="100%" 
@@ -188,24 +188,24 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
             </div>
 
             {/* Tabs */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="flex border-b border-slate-100 justify-between items-center overflow-x-auto no-scrollbar">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
+              <div className="flex border-b border-slate-100 dark:border-slate-700 justify-between items-center overflow-x-auto no-scrollbar">
                 <div className="flex">
                   <button 
                     onClick={() => setActiveTab('content')}
-                    className={`px-4 md:px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === 'content' ? 'border-brand-600 text-brand-600 bg-brand-50/30' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+                    className={`px-4 md:px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === 'content' ? 'border-brand-600 dark:border-brand-400 text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                   >
                     Conteúdo
                   </button>
                   <button 
                     onClick={() => setActiveTab('notes')}
-                    className={`px-4 md:px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === 'notes' ? 'border-brand-600 text-brand-600 bg-brand-50/30' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+                    className={`px-4 md:px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === 'notes' ? 'border-brand-600 dark:border-brand-400 text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                   >
                     Anotações
                   </button>
                   <button 
                     onClick={() => setActiveTab('quiz')}
-                    className={`px-4 md:px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === 'quiz' ? 'border-brand-600 text-brand-600 bg-brand-50/30' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+                    className={`px-4 md:px-6 py-4 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === 'quiz' ? 'border-brand-600 dark:border-brand-400 text-brand-600 dark:text-brand-400 bg-brand-50/30 dark:bg-brand-900/10' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
                   >
                     Quiz
                   </button>
@@ -215,10 +215,10 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
               <div className="p-4 md:p-8">
                 {activeTab === 'content' && (
                   <div className="flex flex-col h-full">
-                    <div className="prose prose-slate prose-headings:font-bold prose-a:text-brand-600 max-w-none flex-1">
+                    <div className="prose prose-slate dark:prose-invert prose-headings:font-bold prose-a:text-brand-600 dark:prose-a:text-brand-400 max-w-none flex-1">
                       {/* Header com Título e Botão de Ação Imediata */}
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-                        <h3 className="text-xl md:text-2xl font-bold text-slate-900 m-0">{activeLesson.title}</h3>
+                        <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white m-0">{activeLesson.title}</h3>
                         
                         {/* Primary Action Button Logic */}
                         {isCourseFinished && isLessonCompleted ? (
@@ -237,7 +237,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                             onClick={handleManualComplete} 
                             size="sm" 
                             variant={isLessonCompleted ? "outline" : "primary"}
-                            className="flex-shrink-0 flex items-center justify-center gap-2 w-full sm:w-auto"
+                            className="flex-shrink-0 flex items-center justify-center gap-2 w-full sm:w-auto dark:border-slate-600 dark:text-slate-300"
                            >
                             {isLessonCompleted ? "Próxima" : "Responder Quiz"} 
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -247,14 +247,14 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                         )}
                       </div>
                       
-                      <div className="whitespace-pre-line text-slate-600 leading-relaxed text-base">
+                      <div className="whitespace-pre-line text-slate-600 dark:text-slate-300 leading-relaxed text-base">
                         {activeLesson.content}
                       </div>
                     </div>
 
                     {/* Botão de Conclusão Manual no final do conteúdo */}
-                    <div className="mt-8 md:mt-12 pt-8 border-t border-slate-100 flex flex-col items-center gap-4">
-                        <p className="text-slate-500 text-sm text-center">
+                    <div className="mt-8 md:mt-12 pt-8 border-t border-slate-100 dark:border-slate-700 flex flex-col items-center gap-4">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm text-center">
                             {isLessonCompleted 
                               ? (isCourseFinished ? "Parabéns! Você concluiu todo o curso." : "Você já completou esta aula.")
                               : "Finalizou o conteúdo? Responda o Quiz para avançar."}
@@ -279,7 +279,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                             onClick={handleManualComplete} 
                             size="lg" 
                             variant={isLessonCompleted ? "secondary" : "primary"}
-                            className={`flex items-center justify-center gap-2 shadow-lg w-full ${isLessonCompleted ? 'animate-pulse hover:animate-none' : ''}`}
+                            className={`flex items-center justify-center gap-2 shadow-lg w-full ${isLessonCompleted ? 'animate-pulse hover:animate-none dark:bg-slate-700 dark:text-white' : ''}`}
                           >
                               {isLessonCompleted ? "Próxima Aula" : "Responder Quiz para Avançar"}
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -294,10 +294,10 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                 {activeTab === 'notes' && (
                   <div className="space-y-4 h-full flex flex-col">
                     <div className="flex items-center justify-between">
-                        <label className="text-sm font-bold text-slate-700">Caderno de Estudos</label>
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Caderno de Estudos</label>
                         <div className="flex items-center gap-2 h-5">
                             {saveStatus === 'saving' && (
-                                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 animate-pulse transition-opacity">
+                                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 animate-pulse transition-opacity">
                                     <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                     Salvando alterações...
                                 </span>
@@ -311,18 +311,18 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                         </div>
                     </div>
                     <textarea 
-                      className="w-full flex-1 min-h-[320px] p-5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-slate-700 leading-relaxed shadow-sm transition-shadow"
+                      className="w-full flex-1 min-h-[320px] p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-slate-700 dark:text-slate-200 leading-relaxed shadow-sm transition-all"
                       placeholder="Escreva seus insights e reflexões sobre esta aula..."
                       value={noteContent}
                       onChange={handleNoteChange}
                     ></textarea>
                     
-                    <div className="flex justify-end pt-2 border-t border-slate-50 mt-2">
+                    <div className="flex justify-end pt-2 border-t border-slate-50 dark:border-slate-700 mt-2">
                         <Button 
                             onClick={handleManualSaveNotes} 
                             disabled={saveStatus === 'saving' || (saveStatus === 'saved' && noteContent === '')}
                             variant={saveStatus === 'saved' ? "outline" : "primary"}
-                            className="min-w-[160px] transition-all duration-300"
+                            className="min-w-[160px] transition-all duration-300 dark:border-slate-600 dark:text-slate-300"
                         >
                             {saveStatus === 'saving' ? (
                                 <span className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                                 </span>
                             ) : (
                                 saveStatus === 'saved' ? (
-                                    <span className="flex items-center gap-2 text-green-600">
+                                    <span className="flex items-center gap-2 text-green-600 dark:text-green-400">
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                         Anotações Salvas
                                     </span>
@@ -350,14 +350,14 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                 {activeTab === 'quiz' && (
                   <div className="max-w-2xl mx-auto py-2">
                     <div className="mb-8">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-100 text-brand-700 text-xs font-bold uppercase tracking-wider mb-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider mb-4">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         Teste de Conhecimento
                       </span>
-                      <h3 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
+                      <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
                         {activeLesson.quiz.question}
                       </h3>
-                      <p className="text-slate-500 mt-2 text-sm">Responda para ganhar pontos extras no ranking.</p>
+                      <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">Responda para ganhar pontos extras no ranking.</p>
                     </div>
                     
                     <div className="space-y-4">
@@ -365,18 +365,18 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                         const isSelected = selectedOptionId === option.id;
                         
                         // Definição de estilos base
-                        let containerClass = "border-slate-200 hover:border-brand-300 hover:bg-slate-50";
-                        let iconClass = "border-slate-300 text-transparent";
+                        let containerClass = "border-slate-200 dark:border-slate-700 hover:border-brand-300 dark:hover:border-brand-500 hover:bg-slate-50 dark:hover:bg-slate-700/50";
+                        let iconClass = "border-slate-300 dark:border-slate-600 text-transparent";
                         let iconSvg = null;
-                        let textClass = "text-slate-700";
+                        let textClass = "text-slate-700 dark:text-slate-300";
 
                         // Lógica de Feedback Imediato
                         if (isSelected) {
                           if (option.isCorrect) {
                             // Estilo para RESPOSTA CORRETA (Verde)
-                            containerClass = "border-green-500 bg-green-50 ring-1 ring-green-500 shadow-sm";
+                            containerClass = "border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-500 shadow-sm";
                             iconClass = "border-green-500 bg-green-500 text-white";
-                            textClass = "text-green-800 font-bold";
+                            textClass = "text-green-800 dark:text-green-400 font-bold";
                             iconSvg = (
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -385,9 +385,9 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                           } else {
                             // Estilo para RESPOSTA INCORRETA (Vermelho Intenso)
                             // Aumentei a saturação e o ring para destacar
-                            containerClass = "border-red-500 bg-red-100 ring-2 ring-red-500 shadow-md transform scale-[1.01]";
+                            containerClass = "border-red-500 bg-red-100 dark:bg-red-900/20 ring-2 ring-red-500 shadow-md transform scale-[1.01]";
                             iconClass = "border-red-500 bg-red-600 text-white";
-                            textClass = "text-red-900 font-bold";
+                            textClass = "text-red-900 dark:text-red-400 font-bold";
                             iconSvg = (
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -433,28 +433,28 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                            <>
                              {/* Feedback Negativo */}
                              {!isCorrect && (
-                                <div className="p-6 bg-red-50 border border-red-200 rounded-xl flex flex-col md:flex-row items-center md:items-start gap-4 animate-fade-in text-center md:text-left">
-                                    <div className="p-3 bg-red-100 rounded-full text-red-600 flex-shrink-0">
+                                <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex flex-col md:flex-row items-center md:items-start gap-4 animate-fade-in text-center md:text-left">
+                                    <div className="p-3 bg-red-100 dark:bg-red-900/50 rounded-full text-red-600 dark:text-red-400 flex-shrink-0">
                                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     </div>
                                     <div className="flex-1">
-                                        <h4 className="font-bold text-red-900 text-lg mb-1">Resposta Incorreta</h4>
-                                        <p className="text-red-800 mb-0">Não desanime. Tente selecionar outra opção para encontrar a resposta certa.</p>
+                                        <h4 className="font-bold text-red-900 dark:text-red-300 text-lg mb-1">Resposta Incorreta</h4>
+                                        <p className="text-red-800 dark:text-red-400 mb-0">Não desanime. Tente selecionar outra opção para encontrar a resposta certa.</p>
                                     </div>
                                 </div>
                              )}
 
                              {/* Feedback Positivo */}
                              {isCorrect && (
-                                <div className="p-6 bg-green-50 border border-green-200 rounded-xl flex flex-col md:flex-row items-center md:items-start gap-4 animate-fade-in text-center md:text-left shadow-sm">
-                                    <div className="p-3 bg-green-100 rounded-full text-green-600 flex-shrink-0">
+                                <div className="p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl flex flex-col md:flex-row items-center md:items-start gap-4 animate-fade-in text-center md:text-left shadow-sm">
+                                    <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-full text-green-600 dark:text-green-400 flex-shrink-0">
                                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     </div>
                                     <div className="flex-1">
-                                        <h4 className="font-bold text-green-900 text-lg mb-1">Excelente!</h4>
-                                        <p className="text-green-800">Você compreendeu o conceito fundamental.</p>
+                                        <h4 className="font-bold text-green-900 dark:text-green-300 text-lg mb-1">Excelente!</h4>
+                                        <p className="text-green-800 dark:text-green-400">Você compreendeu o conceito fundamental.</p>
                                         
-                                        <div className="mt-4 pt-4 border-t border-green-200/60 flex justify-center md:justify-end">
+                                        <div className="mt-4 pt-4 border-t border-green-200/60 dark:border-green-800/60 flex justify-center md:justify-end">
                                              {isCourseFinished ? (
                                                 <Button 
                                                   onClick={onViewCertificate} 
@@ -480,12 +480,12 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
 
                         {/* Estado quando a aula já estava concluída ao carregar */}
                         {isLessonCompleted && !selectedOptionId && (
-                           <div className="p-8 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                           <div className="p-8 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-3">
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                 </div>
-                                <h4 className="font-bold text-slate-900 text-lg mb-2">Quiz Concluído</h4>
-                                <p className="text-slate-500 mb-6">Você já garantiu seus pontos nesta aula.</p>
+                                <h4 className="font-bold text-slate-900 dark:text-white text-lg mb-2">Quiz Concluído</h4>
+                                <p className="text-slate-500 dark:text-slate-400 mb-6">Você já garantiu seus pontos nesta aula.</p>
                                 {isCourseFinished ? (
                                     <Button 
                                       onClick={onViewCertificate} 
@@ -494,7 +494,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                                         Imprimir Certificado
                                     </Button>
                                 ) : (
-                                    <Button onClick={nextLesson} variant="secondary">
+                                    <Button onClick={nextLesson} variant="secondary" className="dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600">
                                         Avançar para Próxima Aula →
                                     </Button>
                                 )}
@@ -509,15 +509,15 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
         </div>
 
         {/* Course Sidebar (Playlist) */}
-        <div className="w-80 bg-white border-l border-slate-200 hidden lg:flex flex-col flex-shrink-0">
-          <div className="p-5 bg-white border-b border-slate-200">
-            <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Lista de Reprodução</h3>
+        <div className="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 hidden lg:flex flex-col flex-shrink-0 transition-colors">
+          <div className="p-5 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">Lista de Reprodução</h3>
           </div>
           <div className="flex-1 overflow-y-auto">
             {course.modules.map((module, mIdx) => (
-              <div key={module.id} className="border-b border-slate-100 last:border-0">
-                <div className={`px-5 py-4 bg-slate-50/50 flex items-center justify-between ${module.isLocked ? 'opacity-75' : ''}`}>
-                  <h4 className="font-semibold text-sm text-slate-700">{module.title}</h4>
+              <div key={module.id} className="border-b border-slate-100 dark:border-slate-700 last:border-0">
+                <div className={`px-5 py-4 bg-slate-50/50 dark:bg-slate-700/30 flex items-center justify-between ${module.isLocked ? 'opacity-75' : ''}`}>
+                  <h4 className="font-semibold text-sm text-slate-700 dark:text-slate-300">{module.title}</h4>
                   {module.isLocked && <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>}
                 </div>
                 {!module.isLocked && (
@@ -535,25 +535,25 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                            disabled={isLocked}
                            className={`w-full text-left p-4 pl-6 flex items-start gap-3 text-sm transition-all border-l-[3px] ${
                              isActive 
-                               ? 'bg-brand-50 border-brand-600 text-brand-900' 
+                               ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-600 dark:border-brand-500 text-brand-900 dark:text-brand-300' 
                                : isLocked 
-                                 ? 'text-slate-400 border-transparent cursor-not-allowed bg-slate-50/30'
-                                 : 'text-slate-600 border-transparent hover:bg-slate-50 hover:border-slate-300'
+                                 ? 'text-slate-400 dark:text-slate-600 border-transparent cursor-not-allowed bg-slate-50/30 dark:bg-slate-800'
+                                 : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                            }`}
                          >
                            <div className={`mt-0.5 w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 transition-colors ${
                              isDone 
                                ? 'bg-green-500 border-green-500 text-white' 
                                : isActive 
-                                 ? 'border-brand-600 bg-white'
-                                 : 'border-slate-300 bg-white'
+                                 ? 'border-brand-600 dark:border-brand-500 bg-white dark:bg-slate-800'
+                                 : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
                            }`}>
                              {isDone && <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
-                             {!isDone && isActive && <div className="w-2 h-2 rounded-full bg-brand-600" />}
+                             {!isDone && isActive && <div className="w-2 h-2 rounded-full bg-brand-600 dark:bg-brand-500" />}
                            </div>
                            <div className="flex-1">
-                             <p className={`font-medium ${isActive ? 'text-brand-900' : 'text-slate-700'}`}>{lesson.title}</p>
-                             <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+                             <p className={`font-medium ${isActive ? 'text-brand-900 dark:text-brand-300' : 'text-slate-700 dark:text-slate-300'}`}>{lesson.title}</p>
+                             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1">
                                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 {lesson.duration}
                              </p>
