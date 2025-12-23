@@ -24,6 +24,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   const [activeModuleForLesson, setActiveModuleForLesson] = useState<string | null>(null);
 
   // --- CERTIFICATE MANAGEMENT STATES ---
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false); // Estado para notificação
   const [certForm, setCertForm] = useState<CertificateConfig>(course.certificateConfig || {
       title: 'Certificado',
       subtitle: 'de conclusão',
@@ -44,10 +45,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   };
 
   const handleSaveCertificate = () => {
-    // Como o onUpdateCourse já atualiza o estado pai em tempo real, 
-    // este botão serve como confirmação visual e ponto de integração com Backend futuro.
+    // Salva as configurações
     onUpdateCourse({ ...course, certificateConfig: certForm });
-    alert("Configurações do certificado salvas com sucesso!");
+    
+    // Mostra notificação visual elegante em vez de alert
+    setShowSaveSuccess(true);
+    setTimeout(() => setShowSaveSuccess(false), 3000);
   };
 
 
@@ -200,7 +203,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   const avgProgress = Math.round(students.reduce((acc, s) => acc + s.progress, 0) / (totalStudents || 1));
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 transition-colors">
+    <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 transition-colors relative">
       
       {/* Admin Header & Tabs */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex-shrink-0">
@@ -565,6 +568,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
         )}
 
       </div>
+
+      {/* --- NOTIFICAÇÃO DE SUCESSO (TOAST) --- */}
+      {showSaveSuccess && (
+         <div className="fixed bottom-8 right-8 z-50 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in transform transition-all">
+            <div className="bg-white/20 p-1 rounded-full">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <div>
+                <h4 className="font-bold text-sm">Sucesso!</h4>
+                <p className="text-xs text-green-100">Configurações do certificado atualizadas.</p>
+            </div>
+         </div>
+      )}
 
       {/* --- MODAL DE MÓDULO --- */}
       {isModuleModalOpen && (
