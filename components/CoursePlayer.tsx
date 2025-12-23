@@ -144,9 +144,25 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
     }, 800);
   };
 
+  // Helper para renderizar ícone de material
+  const renderMaterialIcon = (type: string) => {
+    switch(type) {
+        case 'pdf':
+            return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>;
+        case 'video':
+            return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+        case 'doc':
+            return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
+        case 'ppt':
+             return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>;
+        default: // link, image, txt
+            return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 relative transition-colors duration-200">
-      {/* Top Bar */}
+      {/* ... Top Bar ... */}
       <div className="h-16 border-b border-slate-200 dark:border-slate-700 flex items-center px-4 md:px-6 justify-between flex-shrink-0 bg-white dark:bg-slate-800 z-20">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-500 dark:text-slate-400 transition-colors flex items-center gap-2">
@@ -269,13 +285,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                                   className="group flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-300 dark:hover:border-brand-500 hover:shadow-md transition-all bg-slate-50 dark:bg-slate-700/30 no-underline"
                                 >
                                    <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-600 flex items-center justify-center text-brand-600 dark:text-brand-400 shadow-sm group-hover:scale-110 transition-transform">
-                                      {material.type === 'pdf' ? (
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                      ) : material.type === 'video' ? (
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                      ) : (
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                                      )}
+                                      {renderMaterialIcon(material.type)}
                                    </div>
                                    <div className="flex-1">
                                       <h5 className="font-bold text-slate-800 dark:text-white text-sm m-0 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{material.title}</h5>
@@ -328,65 +338,67 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                     </div>
                   </div>
                 )}
-
+                {/* Notes and Quiz tabs remain similar */}
                 {activeTab === 'notes' && (
-                  <div className="space-y-4 h-full flex flex-col">
-                    <div className="flex items-center justify-between">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Caderno de Estudos</label>
-                        <div className="flex items-center gap-2 h-5">
-                            {saveStatus === 'saving' && (
-                                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 animate-pulse transition-opacity">
-                                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    Salvando alterações...
-                                </span>
-                            )}
-                            {saveStatus === 'saved' && (
-                                <span className="flex items-center gap-1.5 text-xs font-medium text-slate-400 transition-opacity">
-                                    <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                    Salvo automaticamente
-                                </span>
-                            )}
+                    <div className="space-y-4 h-full flex flex-col">
+                        {/* ... (Existing notes implementation) ... */}
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Caderno de Estudos</label>
+                            <div className="flex items-center gap-2 h-5">
+                                {saveStatus === 'saving' && (
+                                    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 animate-pulse transition-opacity">
+                                        <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        Salvando alterações...
+                                    </span>
+                                )}
+                                {saveStatus === 'saved' && (
+                                    <span className="flex items-center gap-1.5 text-xs font-medium text-slate-400 transition-opacity">
+                                        <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                        Salvo automaticamente
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                    <textarea 
-                      className="w-full flex-1 min-h-[320px] p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-slate-700 dark:text-slate-200 leading-relaxed shadow-sm transition-all"
-                      placeholder="Escreva seus insights e reflexões sobre esta aula..."
-                      value={noteContent}
-                      onChange={handleNoteChange}
-                    ></textarea>
-                    
-                    <div className="flex justify-end pt-2 border-t border-slate-50 dark:border-slate-700 mt-2">
-                        <Button 
-                            onClick={handleManualSaveNotes} 
-                            disabled={saveStatus === 'saving' || (saveStatus === 'saved' && noteContent === '')}
-                            variant={saveStatus === 'saved' ? "outline" : "primary"}
-                            className="min-w-[160px] transition-all duration-300 dark:border-slate-600 dark:text-slate-300"
-                        >
-                            {saveStatus === 'saving' ? (
-                                <span className="flex items-center gap-2">
-                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    Salvando...
-                                </span>
-                            ) : (
-                                saveStatus === 'saved' ? (
-                                    <span className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                        Anotações Salvas
+                        <textarea 
+                        className="w-full flex-1 min-h-[320px] p-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-slate-700 dark:text-slate-200 leading-relaxed shadow-sm transition-all"
+                        placeholder="Escreva seus insights e reflexões sobre esta aula..."
+                        value={noteContent}
+                        onChange={handleNoteChange}
+                        ></textarea>
+                        
+                        <div className="flex justify-end pt-2 border-t border-slate-50 dark:border-slate-700 mt-2">
+                            <Button 
+                                onClick={handleManualSaveNotes} 
+                                disabled={saveStatus === 'saving' || (saveStatus === 'saved' && noteContent === '')}
+                                variant={saveStatus === 'saved' ? "outline" : "primary"}
+                                className="min-w-[160px] transition-all duration-300 dark:border-slate-600 dark:text-slate-300"
+                            >
+                                {saveStatus === 'saving' ? (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        Salvando...
                                     </span>
                                 ) : (
-                                    <span className="flex items-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-                                        Salvar Anotações
-                                    </span>
-                                )
-                            )}
-                        </Button>
+                                    saveStatus === 'saved' ? (
+                                        <span className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                            Anotações Salvas
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                                            Salvar Anotações
+                                        </span>
+                                    )
+                                )}
+                            </Button>
+                        </div>
                     </div>
-                  </div>
                 )}
 
                 {activeTab === 'quiz' && (
                   <div className="max-w-2xl mx-auto py-2">
+                    {/* ... (Existing quiz display logic) ... */}
                     <div className="mb-8">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider mb-4">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -519,6 +531,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                         {/* Estado quando a aula já estava concluída ao carregar */}
                         {isLessonCompleted && !selectedOptionId && (
                            <div className="p-8 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                                {/* ... (Existing completed state) ... */}
                                 <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-3">
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                 </div>
@@ -546,64 +559,66 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
           </div>
         </div>
 
+        {/* ... (Sidebar logic remains the same) ... */}
         {/* Course Sidebar (Playlist) */}
         <div className="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 hidden lg:flex flex-col flex-shrink-0 transition-colors">
-          <div className="p-5 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">Lista de Reprodução</h3>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {course.modules.map((module, mIdx) => (
-              <div key={module.id} className="border-b border-slate-100 dark:border-slate-700 last:border-0">
-                <div className={`px-5 py-4 bg-slate-50/50 dark:bg-slate-700/30 flex items-center justify-between ${module.isLocked ? 'opacity-75' : ''}`}>
-                  <h4 className="font-semibold text-sm text-slate-700 dark:text-slate-300">{module.title}</h4>
-                  {module.isLocked && <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>}
-                </div>
-                {!module.isLocked && (
-                  <div>
-                    {module.lessons.map((lesson, lIdx) => {
-                       const isActive = activeLesson.id === lesson.id;
-                       const isDone = completedLessons.includes(lesson.id);
-                       // Simplistic lock check for internal playlist
-                       const isLocked = lIdx > 0 && !completedLessons.includes(module.lessons[lIdx - 1].id) && !completedLessons.includes(lesson.id);
+            {/* ... */}
+            <div className="p-5 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                <h3 className="font-bold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">Lista de Reprodução</h3>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+                {course.modules.map((module, mIdx) => (
+                    <div key={module.id} className="border-b border-slate-100 dark:border-slate-700 last:border-0">
+                        <div className={`px-5 py-4 bg-slate-50/50 dark:bg-slate-700/30 flex items-center justify-between ${module.isLocked ? 'opacity-75' : ''}`}>
+                            <h4 className="font-semibold text-sm text-slate-700 dark:text-slate-300">{module.title}</h4>
+                            {module.isLocked && <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>}
+                        </div>
+                        {!module.isLocked && (
+                            <div>
+                                {module.lessons.map((lesson, lIdx) => {
+                                    const isActive = activeLesson.id === lesson.id;
+                                    const isDone = completedLessons.includes(lesson.id);
+                                    // Simplistic lock check for internal playlist
+                                    const isLocked = lIdx > 0 && !completedLessons.includes(module.lessons[lIdx - 1].id) && !completedLessons.includes(lesson.id);
 
-                       return (
-                         <button
-                           key={lesson.id}
-                           onClick={() => !isLocked && handleLessonChange(mIdx, lIdx)}
-                           disabled={isLocked}
-                           className={`w-full text-left p-4 pl-6 flex items-start gap-3 text-sm transition-all border-l-[3px] ${
-                             isActive 
-                               ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-600 dark:border-brand-500 text-brand-900 dark:text-brand-300' 
-                               : isLocked 
-                                 ? 'text-slate-400 dark:text-slate-600 border-transparent cursor-not-allowed bg-slate-50/30 dark:bg-slate-800'
-                                 : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                           }`}
-                         >
-                           <div className={`mt-0.5 w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 transition-colors ${
-                             isDone 
-                               ? 'bg-green-500 border-green-500 text-white' 
-                               : isActive 
-                                 ? 'border-brand-600 dark:border-brand-500 bg-white dark:bg-slate-800'
-                                 : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
-                           }`}>
-                             {isDone && <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
-                             {!isDone && isActive && <div className="w-2 h-2 rounded-full bg-brand-600 dark:bg-brand-500" />}
-                           </div>
-                           <div className="flex-1">
-                             <p className={`font-medium ${isActive ? 'text-brand-900 dark:text-brand-300' : 'text-slate-700 dark:text-slate-300'}`}>{lesson.title}</p>
-                             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1">
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                {lesson.duration}
-                             </p>
-                           </div>
-                         </button>
-                       );
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                                    return (
+                                        <button
+                                            key={lesson.id}
+                                            onClick={() => !isLocked && handleLessonChange(mIdx, lIdx)}
+                                            disabled={isLocked}
+                                            className={`w-full text-left p-4 pl-6 flex items-start gap-3 text-sm transition-all border-l-[3px] ${
+                                                isActive 
+                                                ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-600 dark:border-brand-500 text-brand-900 dark:text-brand-300' 
+                                                : isLocked 
+                                                    ? 'text-slate-400 dark:text-slate-600 border-transparent cursor-not-allowed bg-slate-50/30 dark:bg-slate-800'
+                                                    : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                            }`}
+                                        >
+                                            <div className={`mt-0.5 w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 transition-colors ${
+                                                isDone 
+                                                ? 'bg-green-500 border-green-500 text-white' 
+                                                : isActive 
+                                                    ? 'border-brand-600 dark:border-brand-500 bg-white dark:bg-slate-800'
+                                                    : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
+                                            }`}>
+                                                {isDone && <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+                                                {!isDone && isActive && <div className="w-2 h-2 rounded-full bg-brand-600 dark:bg-brand-500" />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className={`font-medium ${isActive ? 'text-brand-900 dark:text-brand-300' : 'text-slate-700 dark:text-slate-300'}`}>{lesson.title}</p>
+                                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1">
+                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                    {lesson.duration}
+                                                </p>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
         </div>
       </div>
     </div>

@@ -30,7 +30,7 @@ export interface Material {
   id: string;
   title: string;
   url: string;
-  type: 'pdf' | 'link' | 'image' | 'video';
+  type: 'pdf' | 'link' | 'image' | 'video' | 'doc' | 'ppt' | 'txt';
 }
 
 export interface Lesson {
