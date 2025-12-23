@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { CoursePlayer } from './components/CoursePlayer';
 import { CertificatePreview } from './components/CertificatePreview';
+import { Profile } from './components/Profile';
 import { ViewState, User } from './types';
 import { MOCK_USER, COURSE_DATA } from './constants';
 import { Button } from './components/Button';
@@ -152,6 +153,16 @@ const App: React.FC = () => {
           />
         )}
         
+        {currentView === 'profile' && (
+          <div className="flex-1 overflow-y-auto">
+            <Profile 
+              user={user}
+              course={COURSE_DATA}
+              onBack={() => setCurrentView('dashboard')}
+            />
+          </div>
+        )}
+
         {currentView === 'admin' && (
           <div className="p-8 flex items-center justify-center h-full text-slate-400 flex-col gap-4">
             <svg className="w-16 h-16 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">

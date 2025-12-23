@@ -201,12 +201,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* User Footer */}
         <div className="p-4 border-t border-slate-100 bg-slate-50 flex-shrink-0">
-          <div className="flex items-center gap-3 mb-4">
+          <div 
+            onClick={() => {
+              onChangeView('profile');
+              onClose();
+            }}
+            className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-slate-100 p-2 rounded-lg transition-colors -mx-2"
+          >
             <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-slate-200" />
             <div className="flex-1 overflow-hidden">
               <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
               <p className="text-xs text-slate-500 truncate">Nível {user.level}</p>
             </div>
+            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
           <div className="w-full bg-slate-200 h-1.5 rounded-full mb-4 overflow-hidden">
             <div 
