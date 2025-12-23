@@ -1,6 +1,7 @@
 
+
 import React from 'react';
-import { User, Course } from '../types';
+import { User, Course, Module, Lesson, Material } from '../types';
 import { Button } from './Button';
 
 interface DashboardProps {
@@ -49,10 +50,59 @@ const RadialProgress = ({ percentage, size = 120, strokeWidth = 10, color = "#7c
   );
 };
 
+// Helper Icon para Materiais
+const renderMaterialIcon = (type: string) => {
+    switch(type) {
+        case 'pdf':
+            return <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>;
+        case 'video':
+            return <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+        case 'doc':
+            return <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
+        case 'ppt':
+             return <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>;
+        default: // link, image, txt
+            return <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>;
+    }
+};
+
 export const Dashboard: React.FC<DashboardProps> = ({ user, course, onResume }) => {
   // Cálculo de XP para o próximo nível (Exemplo: base 400 pts)
   const nextLevelXP = 400;
   const xpPercentage = Math.min((user.points / nextLevelXP) * 100, 100);
+
+  // --- LÓGICA DINÂMICA: Determinar o Módulo/Aula atual ---
+  let activeModule: Module = course.modules[0];
+  let nextLesson: Lesson = activeModule.lessons[0];
+
+  // Encontra a primeira aula não concluída
+  let foundActive = false;
+  for (const module of course.modules) {
+    if(!module.isActive) continue;
+    
+    for (const lesson of module.lessons) {
+        if (!user.completedLessons.includes(lesson.id)) {
+            activeModule = module;
+            nextLesson = lesson;
+            foundActive = true;
+            break;
+        }
+    }
+    if (foundActive) break;
+  }
+  
+  // Se terminou tudo, mostra a última do último módulo
+  if (!foundActive) {
+      const lastModule = course.modules[course.modules.length - 1];
+      activeModule = lastModule;
+      nextLesson = lastModule.lessons[lastModule.lessons.length - 1];
+  }
+
+  // --- LÓGICA DINÂMICA: Coletar Materiais do Módulo Atual ---
+  // Agrega todos os materiais das aulas do módulo ativo
+  const activeMaterials: Material[] = activeModule.lessons
+      .flatMap(l => l.materials)
+      .slice(0, 4); // Limita a 4 para grid
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
@@ -151,7 +201,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, course, onResume }) 
         </div>
       </div>
 
-      {/* Current Course Card */}
+      {/* Current Course Card - DYNAMIC CONTENT */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Em andamento</h2>
@@ -166,7 +216,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, course, onResume }) 
              />
              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
              <div className="absolute bottom-6 left-6 text-white pr-4">
-               <span className="bg-brand-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide shadow-sm mb-2 inline-block">Curso Principal</span>
+               <span className="bg-brand-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide shadow-sm mb-2 inline-block">
+                  {activeModule.title.split(':')[0]}
+               </span>
                <h3 className="text-xl font-bold leading-tight">{course.title}</h3>
              </div>
           </div>
@@ -185,9 +237,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, course, onResume }) 
                    Continuar de onde parou
                 </span>
               </div>
-              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">Próxima Aula: A Dupla Fenda</h4>
+              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">
+                Próxima Aula: {nextLesson.title}
+              </h4>
               <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2">
-                Continue seus estudos sobre o comportamento da matéria e o papel do observador na realidade quântica.
+                {nextLesson.description}
               </p>
             </div>
             <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end">
@@ -199,17 +253,43 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, course, onResume }) 
         </div>
       </section>
 
-      {/* Suggested Materials (Future Phase) */}
-      <section className="opacity-70 pointer-events-none grayscale">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Materiais Complementares (Em Breve)</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 h-32 flex flex-col items-center justify-center gap-2 text-slate-400">
-               <svg className="w-8 h-8 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-              <span className="font-medium text-sm">Conteúdo Bloqueado</span>
-            </div>
-          ))}
+      {/* Suggested Materials (Synced with Active Module) */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                Materiais Complementares
+                <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">
+                    {activeModule.title}
+                </span>
+            </h2>
         </div>
+        
+        {activeMaterials.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {activeMaterials.map((material, i) => (
+                <a 
+                    key={material.id}
+                    href={material.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-300 dark:hover:border-brand-500 hover:shadow-md transition-all h-32 flex flex-col items-center justify-center gap-3 group text-center no-underline"
+                >
+                  <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-slate-700 flex items-center justify-center text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
+                     {renderMaterialIcon(material.type)}
+                  </div>
+                  <span className="font-semibold text-sm text-slate-700 dark:text-slate-200 line-clamp-2 group-hover:text-brand-700 dark:group-hover:text-brand-300">
+                      {material.title}
+                  </span>
+                </a>
+              ))}
+              
+              {/* Fillers to keep layout balanced if needed, or just let it flow */}
+            </div>
+        ) : (
+             <div className="bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center">
+                 <p className="text-slate-500 dark:text-slate-400 text-sm">Nenhum material complementar específico encontrado para este módulo no momento.</p>
+             </div>
+        )}
       </section>
     </div>
   );

@@ -1,4 +1,5 @@
 
+
 import { Course, User } from './types';
 
 export const MOCK_USER: User = {
@@ -95,7 +96,20 @@ Cada pessoa percebe o mundo através de filtros como crenças, emoções, experi
 
 A ciência moderna mostra que aquilo que observamos não é apenas o objeto em si, mas o resultado da interação entre o observador e o observado. Compreender a realidade começa por compreender como percebemos.`,
           isActive: true,
-          materials: [],
+          materials: [
+            {
+              id: 'm_1_1_pdf',
+              title: 'Guia de Percepção (PDF)',
+              url: '#',
+              type: 'pdf'
+            },
+            {
+              id: 'm_1_1_art',
+              title: 'Artigo: Neurociência e Realidade',
+              url: '#',
+              type: 'link'
+            }
+          ],
           quiz: {
             id: 'q_1_1',
             question: 'O que mais influencia a forma como percebemos a realidade?',
@@ -119,7 +133,14 @@ Esse modelo funcionou muito bem para fenômenos grandes, mas começou a falhar a
 
 No nível dos átomos e partículas, os fenômenos não seguem regras rígidas e totalmente previsíveis. Isso mostra que o pensamento clássico é útil, mas limitado.`,
           isActive: true,
-          materials: [],
+          materials: [
+             {
+              id: 'm_1_2_doc',
+              title: 'Resumo: Newton vs Quantum',
+              url: '#',
+              type: 'doc'
+            }
+          ],
           quiz: {
             id: 'q_1_2',
             question: 'O pensamento clássico vê o universo como:',
@@ -165,7 +186,14 @@ No cotidiano, isso é percebido quando nossas expectativas e emoções influenci
 
 O curso Quantum não pede crença cega, mas observação, reflexão e abertura para novos modelos de compreensão da realidade. Assim como aprender uma nova habilidade, compreender o Quantum exige prática mental.`,
           isActive: true,
-          materials: [],
+          materials: [
+             {
+              id: 'm_1_4_vid',
+              title: 'Exercício de Flexibilidade Mental',
+              url: '#',
+              type: 'video'
+            }
+          ],
           quiz: {
             id: 'q_1_4',
             question: 'Qual atitude é mais adequada para aprender conceitos quânticos?',
@@ -238,7 +266,20 @@ Isso demonstra que o comportamento da luz depende do contexto da observação. N
 
 Isso evidencia que o ato de medir interfere no sistema observado, alterando seu comportamento fundamental.`,
           isActive: true,
-          materials: [],
+          materials: [
+             {
+              id: 'm_2_3_sim',
+              title: 'Simulador da Dupla Fenda',
+              url: '#',
+              type: 'link'
+            },
+            {
+              id: 'm_2_3_img',
+              title: 'Diagrama de Interferência',
+              url: '#',
+              type: 'image'
+            }
+          ],
           quiz: {
             id: 'q_2_3',
             question: 'Sem observação direta no experimento, a partícula se comporta como:',
@@ -384,7 +425,14 @@ Mudar sua realidade não é apenas mudar ações físicas, mas alterar o estado 
 
 O universo, em sua essência, é uma criação mental do Todo.`,
           isActive: true,
-          materials: [],
+          materials: [
+            {
+               id: 'm_4_1_kyb',
+               title: 'O Caibalion (Trecho)',
+               url: '#',
+               type: 'pdf'
+            }
+          ],
           quiz: {
             id: 'q_4_1',
             question: 'O Princípio do Mentalismo afirma que:',
