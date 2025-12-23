@@ -60,7 +60,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
     if (lIndex > 0) {
        const prevLessonId = targetModule.lessons[lIndex - 1].id;
        if (!completedLessons.includes(prevLessonId)) {
-         alert("Complete a aula anterior para avançar.");
+         alert("Para liberar a próxima aula, você precisa acertar o Quiz da aula anterior.");
          return;
        }
     } else if (mIndex > 0) {
@@ -68,7 +68,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
         const prevModule = course.modules[mIndex - 1];
         const lastLessonId = prevModule.lessons[prevModule.lessons.length - 1].id;
         if (!completedLessons.includes(lastLessonId)) {
-             alert("Complete o módulo anterior para avançar.");
+             alert("Para liberar este módulo, você precisa completar todas as atividades do módulo anterior.");
              return;
         }
     }
@@ -100,13 +100,16 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
   };
 
   const handleManualComplete = () => {
+    // Alteração: O botão não conclui mais a aula se não estiver feita.
+    // Ele redireciona para o Quiz.
     if (!isLessonCompleted) {
-      onCompleteLesson(activeLesson.id);
-    }
-    
-    // Only go to next lesson if it's NOT the end of the course
-    if (!isCourseFinished) {
-      nextLesson();
+      setActiveTab('quiz');
+      alert("Para concluir esta aula e avançar, responda corretamente a pergunta do Quiz.");
+    } else {
+      // Se já estiver completa, apenas avança
+      if (!isCourseFinished) {
+        nextLesson();
+      }
     }
   };
 
@@ -206,7 +209,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                             variant={isLessonCompleted ? "outline" : "primary"}
                             className="flex-shrink-0 flex items-center justify-center gap-2 w-full sm:w-auto"
                            >
-                            {isLessonCompleted ? "Próxima" : "Concluir"} 
+                            {isLessonCompleted ? "Próxima" : "Responder Quiz"} 
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
@@ -224,7 +227,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                         <p className="text-slate-500 text-sm text-center">
                             {isLessonCompleted 
                               ? (isCourseFinished ? "Parabéns! Você concluiu todo o curso." : "Você já completou esta aula.")
-                              : "Finalizou o conteúdo?"}
+                              : "Finalizou o conteúdo? Responda o Quiz para avançar."}
                         </p>
                         
                         {isCourseFinished && isLessonCompleted ? (
@@ -248,7 +251,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
                             variant={isLessonCompleted ? "secondary" : "primary"}
                             className="flex items-center justify-center gap-2 shadow-lg w-full"
                           >
-                              {isLessonCompleted ? "Próxima Aula" : "Concluir e Avançar"}
+                              {isLessonCompleted ? "Próxima Aula" : "Responder Quiz para Avançar"}
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                               </svg>
