@@ -77,7 +77,7 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateProps>(({
               </p>
 
               <h3 
-                className="text-3xl font-bold"
+                className="text-3xl font-bold w-full mx-auto text-center"
                 style={{ color: config.primaryColor }} // Usando cor primária para o título do curso
               >
                   {courseTitle}
