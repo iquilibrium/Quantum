@@ -65,7 +65,7 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateProps>(({
           </div>
 
           {/* Main Body */}
-          <div className="text-center space-y-8 w-full max-w-4xl">
+          <div className="text-center space-y-8 w-full max-w-4xl flex flex-col items-center">
               <p className="text-slate-500 text-lg">{config.bodyText}</p>
               
               <h2 className="text-6xl font-serif font-bold text-slate-900 italic py-4 border-b border-slate-200 inline-block w-full">
@@ -77,7 +77,7 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateProps>(({
               </p>
 
               <h3 
-                className="text-3xl font-bold w-full mx-auto text-center"
+                className="text-3xl font-bold w-full max-w-3xl mx-auto text-center leading-snug break-words"
                 style={{ color: config.primaryColor }} // Usando cor primária para o título do curso
               >
                   {courseTitle}

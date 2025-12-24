@@ -1,5 +1,4 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Course, Module, Lesson, QuizOption, User, CertificateConfig, Material } from '../types';
 import { Button } from './Button';
@@ -44,6 +43,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   
   // New Material Inputs State
   const [newMaterial, setNewMaterial] = useState<Partial<Material>>({ title: '', url: '', type: 'link' });
+  const [isUploading, setIsUploading] = useState(false); // Novo estado
+  const [uploadProgress, setUploadProgress] = useState(0); // Novo estado
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- CERTIFICATE MANAGEMENT STATES ---
@@ -208,6 +209,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   const openLessonModal = (moduleId: string, lesson?: Lesson) => {
     setActiveModuleForLesson(moduleId);
     setNewMaterial({ title: '', url: '', type: 'link' }); // Reset new material form
+    setIsUploading(false); // Reset upload state
     
     if (lesson) {
       setLessonForm(JSON.parse(JSON.stringify(lesson)));
@@ -259,20 +261,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-        // SIMULAÇÃO DE UPLOAD PARA DB/STORAGE
-        // Em produção, aqui você faria o upload para o Supabase Storage e receberia a URL pública.
-        // const { data, error } = await supabase.storage.from('course-files').upload(file.name, file);
-        
-        const fakeUrl = `https://storage.quantum.edu/files/${file.name.replace(/\s/g, '_')}`;
-        
-        // Preenche o título automaticamente se estiver vazio
-        const autoTitle = newMaterial.title || file.name.split('.')[0];
+        setIsUploading(true);
+        setUploadProgress(0);
 
-        setNewMaterial({ 
-            ...newMaterial, 
-            url: fakeUrl,
-            title: autoTitle
-        });
+        // SIMULAÇÃO DE UPLOAD PROGRESSIVO
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            setUploadProgress(progress);
+
+            if (progress >= 100) {
+                clearInterval(interval);
+                
+                // Finaliza upload simulado
+                const fakeUrl = `https://storage.quantum.edu/files/${file.name.replace(/\s/g, '_')}`;
+                
+                // Preenche o título automaticamente se estiver vazio
+                const autoTitle = newMaterial.title || file.name.split('.')[0];
+
+                setNewMaterial(prev => ({ 
+                    ...prev, 
+                    url: fakeUrl,
+                    title: autoTitle
+                }));
+                setIsUploading(false);
+            }
+        }, 150); // Velocidade da simulação
     }
   };
 
@@ -802,20 +816,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                                     className="hidden"
                                     accept={newMaterial.type === 'image' ? 'image/*' : '.pdf,.doc,.docx,.ppt,.pptx,.txt'}
                                 />
-                                <div className="flex-1 flex gap-2">
-                                     <button 
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="flex-1 text-xs border border-dashed border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 text-left truncate"
-                                     >
-                                         {newMaterial.url ? newMaterial.url.split('/').pop() : `Selecionar arquivo ${newMaterial.type?.toUpperCase()}...`}
-                                     </button>
-                                     <input 
-                                        placeholder="Título (Opcional)"
-                                        className="w-1/2 text-xs px-2 py-1.5 rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                                        value={newMaterial.title}
-                                        onChange={e => setNewMaterial({...newMaterial, title: e.target.value})}
-                                    />
-                                </div>
+                                {isUploading ? (
+                                    <div className="w-full flex flex-col justify-center px-1">
+                                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mb-1">
+                                            <span>Enviando...</span>
+                                            <span>{uploadProgress}%</span>
+                                        </div>
+                                        <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5 overflow-hidden">
+                                            <div 
+                                                className="bg-brand-600 h-full rounded-full transition-all duration-150 ease-linear" 
+                                                style={{ width: `${uploadProgress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex-1 flex gap-2">
+                                        <button 
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="flex-1 text-xs border border-dashed border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 text-left truncate"
+                                        >
+                                            {newMaterial.url ? newMaterial.url.split('/').pop() : `Selecionar arquivo ${newMaterial.type?.toUpperCase()}...`}
+                                        </button>
+                                        <input 
+                                            placeholder="Título (Opcional)"
+                                            className="w-1/2 text-xs px-2 py-1.5 rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                            value={newMaterial.title}
+                                            onChange={e => setNewMaterial({...newMaterial, title: e.target.value})}
+                                        />
+                                    </div>
+                                )}
                              </div>
                         ) : (
                             <>
@@ -841,8 +870,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                         <div className="col-span-1">
                              <button 
                                 onClick={addMaterial}
-                                disabled={!newMaterial.url}
-                                className="w-full h-full bg-brand-600 text-white rounded flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={!newMaterial.url || isUploading}
+                                className="w-full h-full bg-brand-600 text-white rounded flex items-center justify-center hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 title="Adicionar"
                              >
                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
