@@ -300,6 +300,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
       });
   };
 
+  // Função para editar material inline
+  const updateExistingMaterial = (idx: number, field: keyof Material, value: any) => {
+    const newMaterials = [...(lessonForm.materials || [])];
+    newMaterials[idx] = { ...newMaterials[idx], [field]: value };
+    setLessonForm({ ...lessonForm, materials: newMaterials });
+  };
+
   // --- QUIZ HELPERS ---
   const handleOptionChange = (idx: number, field: keyof QuizOption, value: any) => {
     if (!lessonForm.quiz) return;
@@ -486,7 +493,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                                       {student.role !== 'coordinator' && (
                                           <button 
                                             onClick={() => toggleStudentActive(student)}
-                                            className={`text-xs font-bold px-3 py-1.5 rounded border transition-colors ${student.isActive ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20' : 'border-green-200 text-green-600 hover:bg-green-50 dark:border-green-900/50 dark:text-green-400 dark:hover:bg-green-900/20'}`}
+                                            className={`text-xs font-bold px-3 py-1.5 rounded border transition-colors hover:shadow-sm ${student.isActive ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20' : 'border-green-200 text-green-600 hover:bg-green-50 dark:border-green-900/50 dark:text-green-400 dark:hover:bg-green-900/20'}`}
                                           >
                                               {student.isActive ? 'Bloquear Acesso' : 'Ativar Aluno'}
                                           </button>
@@ -576,10 +583,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                     
                     <div className="w-px h-6 bg-slate-200 dark:bg-slate-600 mx-2"></div>
 
-                    <button onClick={(e) => { e.stopPropagation(); openModuleModal(module); }} className="p-2 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors" title="Editar Módulo">
+                    <button onClick={(e) => { e.stopPropagation(); openModuleModal(module); }} className="p-2 text-slate-500 hover:text-brand-600 hover:bg-brand-50 dark:text-slate-400 dark:hover:text-brand-400 dark:hover:bg-brand-900/20 rounded-full transition-all" title="Editar Módulo">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); deleteModule(module.id); }} className="p-2 text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 transition-colors" title="Excluir Módulo">
+                    <button onClick={(e) => { e.stopPropagation(); deleteModule(module.id); }} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-full transition-all" title="Excluir Módulo">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                   </div>
@@ -624,13 +631,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                             <button 
                                 onClick={() => toggleLessonStatus(module.id, lesson)}
                                 title={lesson.isActive ? "Desativar Aula" : "Ativar Aula"}
-                                className={`text-xs font-medium px-2 py-1 rounded border ${lesson.isActive ? 'border-green-200 text-green-600 bg-green-50 dark:bg-green-900/20 dark:border-green-800' : 'border-slate-300 text-slate-500 bg-slate-100 dark:bg-slate-700 dark:border-slate-600'}`}
+                                className={`text-xs font-medium px-2 py-1 rounded border hover:shadow-sm hover:brightness-95 dark:hover:brightness-110 transition-all ${lesson.isActive ? 'border-green-200 text-green-600 bg-green-50 dark:bg-green-900/20 dark:border-green-800' : 'border-slate-300 text-slate-500 bg-slate-100 dark:bg-slate-700 dark:border-slate-600'}`}
                             >
                                 {lesson.isActive ? 'Ativa' : 'Inativa'}
                             </button>
                             <div className="w-px h-4 bg-slate-200 dark:bg-slate-600"></div>
                             <Button size="sm" variant="ghost" onClick={() => openLessonModal(module.id, lesson)}>Editar</Button>
-                            <button onClick={() => deleteLesson(module.id, lesson.id)} className="text-red-400 hover:text-red-600 p-2">
+                            <button onClick={() => deleteLesson(module.id, lesson.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all">
                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
@@ -716,23 +723,53 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                         </span>
                     </h4>
                     
-                    {/* Lista de Materiais */}
+                    {/* Lista de Materiais com Edição Inline */}
                     <div className="space-y-2 mb-4 max-h-40 overflow-y-auto custom-scrollbar">
-                        {(lessonForm.materials || []).map((mat) => (
-                            <div key={mat.id} className="flex items-center justify-between bg-white dark:bg-slate-700 p-2 rounded border border-slate-200 dark:border-slate-600">
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                    <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
-                                        ['pdf', 'doc', 'ppt'].includes(mat.type) 
-                                            ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' 
-                                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
-                                    }`}>
-                                        {mat.type}
-                                    </span>
-                                    <span className="text-xs text-slate-700 dark:text-slate-200 truncate max-w-[150px]" title={mat.title}>{mat.title}</span>
+                        {(lessonForm.materials || []).map((mat, idx) => (
+                            <div key={mat.id} className="grid grid-cols-12 gap-2 bg-white dark:bg-slate-700/50 p-2 rounded border border-slate-200 dark:border-slate-600 items-center">
+                                {/* Type Select */}
+                                <div className="col-span-2">
+                                     <select
+                                        className="w-full text-xs px-1 py-1 rounded border dark:bg-slate-600 dark:border-slate-500 dark:text-white focus:ring-1 focus:ring-brand-500 outline-none"
+                                        value={mat.type}
+                                        onChange={(e) => updateExistingMaterial(idx, 'type', e.target.value)}
+                                    >
+                                        <option value="link">Link</option>
+                                        <option value="video">Vídeo</option>
+                                        <option value="pdf">PDF</option>
+                                        <option value="image">Img</option>
+                                        <option value="doc">Doc</option>
+                                        <option value="ppt">PPT</option>
+                                        <option value="txt">Txt</option>
+                                    </select>
                                 </div>
-                                <button onClick={() => removeMaterial(mat.id)} className="text-slate-400 hover:text-red-500">
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                </button>
+                                {/* Title Input */}
+                                <div className="col-span-4">
+                                    <input
+                                        className="w-full text-xs px-2 py-1 rounded border dark:bg-slate-600 dark:border-slate-500 dark:text-white focus:ring-1 focus:ring-brand-500 outline-none"
+                                        value={mat.title}
+                                        onChange={(e) => updateExistingMaterial(idx, 'title', e.target.value)}
+                                        placeholder="Título"
+                                    />
+                                </div>
+                                {/* URL Input */}
+                                <div className="col-span-5 relative">
+                                     <input
+                                        className="w-full text-xs px-2 py-1 rounded border dark:bg-slate-600 dark:border-slate-500 dark:text-white focus:ring-1 focus:ring-brand-500 outline-none pr-6"
+                                        value={mat.url}
+                                        onChange={(e) => updateExistingMaterial(idx, 'url', e.target.value)}
+                                        placeholder="URL"
+                                    />
+                                    <a href={mat.url} target="_blank" rel="noreferrer" className="absolute right-1.5 top-1.5 text-slate-400 hover:text-brand-500" title="Testar Link">
+                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                    </a>
+                                </div>
+                                {/* Delete Button */}
+                                <div className="col-span-1 flex justify-center">
+                                    <button onClick={() => removeMaterial(mat.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all" title="Remover">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
                             </div>
                         ))}
                         {(lessonForm.materials || []).length === 0 && <p className="text-xs text-slate-400 italic text-center py-2">Nenhum material adicionado.</p>}
@@ -849,7 +886,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                                 onChange={(e) => handleOptionChange(idx, 'text', e.target.value)}
                                 placeholder={`Opção ${idx + 1}`}
                             />
-                            <button onClick={() => removeQuizOption(idx)} className="text-slate-400 hover:text-red-500">
+                            <button onClick={() => removeQuizOption(idx)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>

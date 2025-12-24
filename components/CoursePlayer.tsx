@@ -11,6 +11,7 @@ interface CoursePlayerProps {
   onViewCertificate: () => void; // New prop for navigation
   initialModuleIndex?: number;
   initialLessonIndex?: number;
+  onLessonChange?: (moduleIndex: number, lessonIndex: number) => void; // New prop for sync
 }
 
 export const CoursePlayer: React.FC<CoursePlayerProps> = ({ 
@@ -20,7 +21,8 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
   onBack,
   onViewCertificate,
   initialModuleIndex = 0,
-  initialLessonIndex = 0
+  initialLessonIndex = 0,
+  onLessonChange
 }) => {
   const [activeModuleIndex, setActiveModuleIndex] = useState(initialModuleIndex);
   const [activeLessonIndex, setActiveLessonIndex] = useState(initialLessonIndex);
@@ -81,6 +83,11 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
 
     setActiveModuleIndex(mIndex);
     setActiveLessonIndex(lIndex);
+    
+    // Notify parent to sync sidebar
+    if (onLessonChange) {
+        onLessonChange(mIndex, lIndex);
+    }
   };
 
   const handleOptionSelect = (optionId: string, isOptCorrect: boolean) => {

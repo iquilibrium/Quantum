@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -183,6 +182,7 @@ const App: React.FC = () => {
         onChangeView={setCurrentView} 
         onLogout={handleLogout}
         onSelectLesson={handleSelectLessonFromSidebar}
+        activeLesson={activeLessonCoords} // Passando estado ativo
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         theme={theme}
@@ -212,6 +212,7 @@ const App: React.FC = () => {
             onViewCertificate={() => setCurrentView('certificate')}
             initialModuleIndex={activeLessonCoords?.mIndex || 0}
             initialLessonIndex={activeLessonCoords?.lIndex || 0}
+            onLessonChange={(m, l) => setActiveLessonCoords({mIndex: m, lIndex: l})} // Sincronização
           />
         )}
 

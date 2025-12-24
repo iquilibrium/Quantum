@@ -10,6 +10,7 @@ interface SidebarProps {
   onChangeView: (view: ViewState) => void;
   onLogout: () => void;
   onSelectLesson: (moduleIndex: number, lessonIndex: number) => void;
+  activeLesson: { mIndex: number, lIndex: number } | null; // Novo prop para destaque
   isOpen: boolean;
   onClose: () => void;
   theme: 'light' | 'dark';
@@ -40,8 +41,8 @@ const LockIcon = () => (
   </svg>
 );
 
-const PlayIcon = () => (
-  <svg className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0 group-hover:text-brand-500 dark:group-hover:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+const PlayIcon = ({ active }: { active?: boolean }) => (
+  <svg className={`w-3.5 h-3.5 flex-shrink-0 ${active ? 'text-brand-600 dark:text-brand-300' : 'text-slate-400 dark:text-slate-500 group-hover:text-brand-500 dark:group-hover:text-brand-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
@@ -66,6 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onChangeView, 
   onLogout,
   onSelectLesson,
+  activeLesson,
   isOpen,
   onClose,
   theme,
@@ -117,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onChangeView('dashboard');
                 onClose();
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-6 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 ease-in-out mb-6 ${
                 currentView === 'dashboard' 
                   ? 'bg-brand-50 dark:bg-slate-700/50 text-brand-700 dark:text-brand-300' 
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
@@ -159,6 +161,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                             const isCompleted = user.completedLessons.includes(lesson.id);
                             
+                            // Check if active
+                            const isActiveLesson = activeLesson?.mIndex === mIdx && activeLesson?.lIndex === lIdx;
+
                             // Check if locked logic
                             let isLocked = module.isLocked;
                             if (!isLocked) {
@@ -187,14 +192,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 ${!lesson.isActive ? 'opacity-50' : ''}
                                 ${isLocked 
                                     ? 'opacity-60 cursor-not-allowed' 
-                                    : 'hover:bg-slate-100 dark:hover:bg-slate-700/80 cursor-pointer'
+                                    : isActiveLesson 
+                                      ? 'bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 font-semibold ring-1 ring-brand-200 dark:ring-brand-700 shadow-sm' 
+                                      : 'hover:bg-slate-100 dark:hover:bg-slate-700/80 cursor-pointer text-slate-600 dark:text-slate-400'
                                 }
                                 `}
                             >
                                 <div className="mt-0.5">
-                                {isCompleted ? <CheckCircleIcon className="animate-scale-in" /> : (isLocked ? <LockIcon /> : <PlayIcon />)}
+                                {isCompleted ? <CheckCircleIcon className="animate-scale-in origin-center" /> : (isLocked ? <LockIcon /> : <PlayIcon active={isActiveLesson} />)}
                                 </div>
-                                <span className={`text-xs leading-relaxed ${isCompleted ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400 font-medium group-hover:text-brand-700 dark:group-hover:text-brand-300'}`}>
+                                <span className={`text-xs leading-relaxed ${isCompleted ? 'text-slate-500 dark:text-slate-500 font-normal' : (isActiveLesson ? '' : 'group-hover:text-brand-700 dark:group-hover:text-brand-300')}`}>
                                 {lesson.title}
                                 {!lesson.isActive && <span className="ml-2 text-[9px] uppercase bg-slate-200 dark:bg-slate-700 text-slate-500 px-1 rounded">Off</span>}
                                 </span>
@@ -215,7 +222,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onChangeView('admin');
                     onClose();
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 ease-in-out ${
                     currentView === 'admin' 
                       ? 'bg-brand-50 dark:bg-slate-700/50 text-brand-700 dark:text-brand-300' 
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
@@ -237,7 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onChangeView('profile');
               onClose();
             }}
-            className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-lg transition-colors -mx-2"
+            className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-lg transition-all duration-300 -mx-2"
           >
             <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-600" />
             <div className="flex-1 overflow-hidden">
