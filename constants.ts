@@ -204,6 +204,24 @@ O curso Quantum não pede crença cega, mas observação, reflexão e abertura p
               { id: 'opt_4', text: 'Rejeição imediata', isCorrect: false }
             ]
           }
+        },
+        {
+          id: 'l_1_inactive_ex',
+          title: 'Aula Inativa Exemplo',
+          description: 'Esta é uma aula de exemplo inativa para demonstração.',
+          videoId: 'placeholder',
+          duration: '5 min',
+          content: 'Conteúdo temporário para aula inativa. Apenas administradores deveriam ver isso em modo de edição.',
+          isActive: false,
+          materials: [],
+          quiz: {
+            id: 'q_1_inactive',
+            question: 'Esta aula é visível para estudantes?',
+            options: [
+              { id: 'opt_i_1', text: 'Sim', isCorrect: false },
+              { id: 'opt_i_2', text: 'Não', isCorrect: true }
+            ]
+          }
         }
       ]
     },
