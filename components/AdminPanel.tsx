@@ -21,6 +21,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   // --- SEARCH STATE ---
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
 
+  // --- DRAG AND DROP STATE ---
+  const [draggedModuleIdx, setDraggedModuleIdx] = useState<number | null>(null);
+  const [draggedLessonInfo, setDraggedLessonInfo] = useState<{ modIdx: number, lessIdx: number } | null>(null);
+
   useEffect(() => {
     // Simula um delay de rede ao carregar o componente para exibir o spinner
     const timer = setTimeout(() => {
@@ -54,6 +58,57 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
       primaryColor: '#7c3aed',
       displaySeal: true
   });
+
+  // --- DRAG AND DROP HANDLERS ---
+
+  // 1. Module Reordering
+  const handleModuleDragStart = (index: number) => {
+    setDraggedModuleIdx(index);
+  };
+
+  const handleModuleDragEnter = (targetIndex: number) => {
+    if (draggedModuleIdx === null || draggedModuleIdx === targetIndex) return;
+
+    const newModules = [...course.modules];
+    const draggedItem = newModules[draggedModuleIdx];
+    
+    // Remove do index antigo e insere no novo
+    newModules.splice(draggedModuleIdx, 1);
+    newModules.splice(targetIndex, 0, draggedItem);
+
+    onUpdateCourse({ ...course, modules: newModules });
+    setDraggedModuleIdx(targetIndex);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedModuleIdx(null);
+    setDraggedLessonInfo(null);
+  };
+
+  // 2. Lesson Reordering
+  const handleLessonDragStart = (modIdx: number, lessIdx: number) => {
+    setDraggedLessonInfo({ modIdx, lessIdx });
+  };
+
+  const handleLessonDragEnter = (targetModIdx: number, targetLessIdx: number) => {
+    // Só permite reordenar dentro do mesmo módulo
+    if (!draggedLessonInfo || draggedLessonInfo.modIdx !== targetModIdx || draggedLessonInfo.lessIdx === targetLessIdx) return;
+
+    const newModules = [...course.modules];
+    const targetModule = newModules[targetModIdx];
+    const newLessons = [...targetModule.lessons];
+    const draggedLesson = newLessons[draggedLessonInfo.lessIdx];
+
+    // Swap logic
+    newLessons.splice(draggedLessonInfo.lessIdx, 1);
+    newLessons.splice(targetLessIdx, 0, draggedLesson);
+
+    newModules[targetModIdx] = { ...targetModule, lessons: newLessons };
+    
+    onUpdateCourse({ ...course, modules: newModules });
+    setDraggedLessonInfo({ modIdx: targetModIdx, lessIdx: targetLessIdx });
+  };
+
 
   // --- CERTIFICATE HELPERS ---
   const handleCertChange = (field: keyof CertificateConfig, value: any) => {
@@ -91,7 +146,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
       onUpdateCourse({ ...course, modules: newModules });
   };
 
-  // --- MODULE REORDERING ---
+  // --- MODULE REORDERING (Legacy Buttons) ---
   const moveModuleUp = (index: number) => {
     if (index === 0) return; // Já é o primeiro
     const newModules = [...course.modules];
@@ -459,28 +514,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
         {activeTab === 'content' && (
            <div className="space-y-6 animate-fade-in">
             {course.modules.map((module, index) => (
-              <div key={module.id} className={`bg-white dark:bg-slate-800 rounded-xl border overflow-hidden shadow-sm transition-all ${module.isActive ? 'border-slate-200 dark:border-slate-700' : 'border-slate-200 dark:border-slate-700 opacity-60 grayscale-[0.5]'}`}>
+              <div 
+                key={module.id} 
+                className={`bg-white dark:bg-slate-800 rounded-xl border overflow-hidden shadow-sm transition-all duration-200 ${
+                    module.isActive ? 'border-slate-200 dark:border-slate-700' : 'border-slate-200 dark:border-slate-700 opacity-60 grayscale-[0.5]'
+                } ${draggedModuleIdx === index ? 'opacity-40 ring-2 ring-brand-500 border-transparent' : ''}`}
+                draggable
+                onDragStart={() => handleModuleDragStart(index)}
+                onDragEnter={() => handleModuleDragEnter(index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => e.preventDefault()}
+              >
                 {/* Module Header */}
-                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700">
+                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-700 cursor-move group">
                   <div className="flex items-center gap-3">
-                     {/* Botões de Reordenação */}
-                     <div className="flex flex-col gap-0.5">
-                        <button 
-                          onClick={() => moveModuleUp(index)}
-                          disabled={index === 0}
-                          className="text-slate-400 hover:text-brand-600 dark:text-slate-500 dark:hover:text-brand-400 disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Mover para cima"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                        </button>
-                        <button 
-                          onClick={() => moveModuleDown(index)}
-                          disabled={index === course.modules.length - 1}
-                          className="text-slate-400 hover:text-brand-600 dark:text-slate-500 dark:hover:text-brand-400 disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Mover para baixo"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                        </button>
+                     {/* Drag Handle & Reorder Buttons */}
+                     <div className="flex items-center gap-2">
+                        <div className="text-slate-400 cursor-grab hover:text-slate-600 dark:hover:text-slate-300">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                            <button 
+                            onClick={(e) => { e.stopPropagation(); moveModuleUp(index); }}
+                            disabled={index === 0}
+                            className="text-slate-400 hover:text-brand-600 dark:text-slate-500 dark:hover:text-brand-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Mover para cima"
+                            >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                            </button>
+                            <button 
+                            onClick={(e) => { e.stopPropagation(); moveModuleDown(index); }}
+                            disabled={index === course.modules.length - 1}
+                            className="text-slate-400 hover:text-brand-600 dark:text-slate-500 dark:hover:text-brand-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Mover para baixo"
+                            >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                        </div>
                      </div>
 
                      <div className={`p-2 rounded-lg shadow-sm transition-colors ${module.isActive ? 'bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400' : 'bg-slate-200 dark:bg-slate-600 text-slate-400 dark:text-slate-500'}`}>
@@ -497,7 +567,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                   <div className="flex items-center gap-2">
                     {/* Toggle Active Switch for Module */}
                     <button 
-                        onClick={() => toggleModuleStatus(module)}
+                        onClick={(e) => { e.stopPropagation(); toggleModuleStatus(module); }}
                         title={module.isActive ? "Desativar Módulo" : "Ativar Módulo"}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${module.isActive ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}
                     >
@@ -506,20 +576,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                     
                     <div className="w-px h-6 bg-slate-200 dark:bg-slate-600 mx-2"></div>
 
-                    <button onClick={() => openModuleModal(module)} className="p-2 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors" title="Editar Módulo">
+                    <button onClick={(e) => { e.stopPropagation(); openModuleModal(module); }} className="p-2 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors" title="Editar Módulo">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                     </button>
-                    <button onClick={() => deleteModule(module.id)} className="p-2 text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 transition-colors" title="Excluir Módulo">
+                    <button onClick={(e) => { e.stopPropagation(); deleteModule(module.id); }} className="p-2 text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 transition-colors" title="Excluir Módulo">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                   </div>
                 </div>
 
                 {/* Lessons List */}
-                <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                  {module.lessons.map((lesson) => (
-                     <div key={lesson.id} className={`p-4 flex items-center justify-between transition-colors ${lesson.isActive ? 'hover:bg-slate-50 dark:hover:bg-slate-700/20' : 'bg-slate-50/50 dark:bg-slate-800/50 opacity-70'}`}>
+                <div className="divide-y divide-slate-100 dark:divide-slate-700/50 bg-slate-50/30 dark:bg-slate-900/10">
+                  {module.lessons.map((lesson, lIdx) => (
+                     <div 
+                        key={lesson.id} 
+                        className={`p-4 flex items-center justify-between transition-colors cursor-move 
+                        ${lesson.isActive ? 'hover:bg-slate-50 dark:hover:bg-slate-700/20' : 'bg-slate-50/50 dark:bg-slate-800/50 opacity-70'}
+                        ${draggedLessonInfo?.modIdx === index && draggedLessonInfo?.lessIdx === lIdx ? 'opacity-40 bg-slate-100 dark:bg-slate-700' : ''}
+                        `}
+                        draggable
+                        onDragStart={(e) => {
+                            e.stopPropagation();
+                            handleLessonDragStart(index, lIdx);
+                        }}
+                        onDragEnter={(e) => {
+                            e.stopPropagation();
+                            handleLessonDragEnter(index, lIdx);
+                        }}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) => e.preventDefault()}
+                     >
                         <div className="flex items-center gap-4">
+                           {/* Lesson Drag Handle */}
+                           <div className="text-slate-300 dark:text-slate-600 cursor-grab hover:text-slate-500">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" /></svg>
+                           </div>
+
                            <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${lesson.isActive ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400' : 'bg-slate-200 dark:bg-slate-600 text-slate-400'}`}>
                              {lesson.isActive ? 'VID' : 'OFF'}
                            </span>

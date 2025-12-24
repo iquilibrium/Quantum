@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -14,20 +15,33 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   
-  // INITIALIZE USER AS COORDINATOR FOR DEMO PURPOSES
-  const [user, setUser] = useState<User>({
-    ...MOCK_USER,
-    role: 'coordinator' // Force admin role for this request
+  // LIFT COURSE STATE
+  const [courseData, setCourseData] = useState<Course>(COURSE_DATA);
+
+  // INITIALIZE USER STATE WITH PERSISTENCE
+  // Tenta carregar do localStorage ou usa o MOCK_USER como fallback
+  const [user, setUser] = useState<User>(() => {
+    const savedUser = localStorage.getItem('quantum_user_v1');
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch (e) {
+        console.error("Erro ao carregar usuário salvo", e);
+      }
+    }
+    return { ...MOCK_USER, role: 'coordinator' }; // Default para demo
   });
 
   // State for List of Students (Admin View)
   const [students, setStudents] = useState<User[]>(MOCK_STUDENTS);
-  
-  // LIFT COURSE STATE
-  const [courseData, setCourseData] = useState<Course>(COURSE_DATA);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // PERSIST USER STATE ON CHANGE
+  useEffect(() => {
+    localStorage.setItem('quantum_user_v1', JSON.stringify(user));
+  }, [user]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -54,13 +68,30 @@ const App: React.FC = () => {
     setIsMobileMenuOpen(false);
   };
 
+  // LÓGICA DE PROGRESSO REAL E DINÂMICO
   const handleCompleteLesson = (lessonId: string) => {
     if (!user.completedLessons.includes(lessonId)) {
+      
+      // 1. Calcula o total de aulas ativas no curso
+      const totalLessons = courseData.modules.reduce((acc, mod) => {
+         return acc + (mod.isActive ? mod.lessons.filter(l => l.isActive).length : 0);
+      }, 0);
+
+      // 2. Adiciona a nova aula concluída
+      const newCompletedList = [...user.completedLessons, lessonId];
+
+      // 3. Calcula a nova porcentagem (0 a 100)
+      // Evita divisão por zero caso o curso esteja vazio
+      const newProgress = totalLessons > 0 
+        ? Math.round((newCompletedList.length / totalLessons) * 100) 
+        : 0;
+
+      // 4. Atualiza o estado global (que atualiza Sidebar e Dashboard via props)
       setUser(prev => ({
         ...prev,
-        completedLessons: [...prev.completedLessons, lessonId],
-        points: prev.points + 50,
-        progress: Math.min(prev.progress + 5, 100)
+        completedLessons: newCompletedList,
+        points: prev.points + 50, // Sistema de Gamificação (XP fixo por aula)
+        progress: Math.min(newProgress, 100)
       }));
     }
   };

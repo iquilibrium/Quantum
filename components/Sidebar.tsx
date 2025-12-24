@@ -28,8 +28,8 @@ const ChartIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-const CheckCircleIcon = () => (
-  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+const CheckCircleIcon = ({ className = '' }: { className?: string }) => (
+  <svg className={`w-4 h-4 text-green-500 flex-shrink-0 ${className}`} fill="currentColor" viewBox="0 0 20 20">
     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
   </svg>
 );
@@ -183,16 +183,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 onClose(); // Auto-close menu on mobile selection
                                 }}
                                 className={`
-                                relative w-full flex items-start gap-2.5 px-3 py-2 text-left rounded-md transition-all group ml-1
+                                relative w-full flex items-start gap-2.5 px-3 py-2 text-left rounded-md transition-all duration-300 ease-in-out group ml-1
                                 ${!lesson.isActive ? 'opacity-50' : ''}
                                 ${isLocked 
                                     ? 'opacity-60 cursor-not-allowed' 
-                                    : 'hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer'
+                                    : 'hover:bg-slate-100 dark:hover:bg-slate-700/80 cursor-pointer'
                                 }
                                 `}
                             >
                                 <div className="mt-0.5">
-                                {isCompleted ? <CheckCircleIcon /> : (isLocked ? <LockIcon /> : <PlayIcon />)}
+                                {isCompleted ? <CheckCircleIcon className="animate-scale-in" /> : (isLocked ? <LockIcon /> : <PlayIcon />)}
                                 </div>
                                 <span className={`text-xs leading-relaxed ${isCompleted ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400 font-medium group-hover:text-brand-700 dark:group-hover:text-brand-300'}`}>
                                 {lesson.title}
