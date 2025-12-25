@@ -1,29 +1,29 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Acesso seguro às variáveis de ambiente do Vite
-// Usa função helper para evitar erros de leitura em runtime se o env não estiver carregado
-const getEnv = (key: string) => {
-  try {
-    // @ts-ignore - Ignora verificação de tipo para acesso seguro ao import.meta
-    return (import.meta as any).env?.[key];
-  } catch {
-    return undefined;
-  }
-};
+// Acesso direto às variáveis de ambiente do Vite (Padrão)
+// Casting import.meta to any to avoid TypeScript errors if vite/client types are missing
+const env = (import.meta as any).env;
 
-const supabaseUrl = getEnv('VITE_SUPABASE_URL');
-const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
+const supabaseUrl = env?.VITE_SUPABASE_URL;
+const supabaseAnonKey = env?.VITE_SUPABASE_ANON_KEY;
 
 let client: SupabaseClient | null = null;
+
+// Debug: Verificar se as variáveis estão sendo lidas (sem expor a chave inteira no console)
+if (env?.DEV) {
+  console.log('[Supabase Client] Inicializando...');
+  console.log('[Supabase Client] URL:', supabaseUrl ? 'Definida ✅' : 'Ausente ❌');
+  console.log('[Supabase Client] Key:', supabaseAnonKey ? 'Definida (***) ✅' : 'Ausente ❌');
+}
 
 if (supabaseUrl && supabaseAnonKey) {
   try {
     client = createClient(supabaseUrl, supabaseAnonKey);
   } catch (error) {
-    console.error('Erro ao inicializar Supabase:', error);
+    console.error('[Supabase Client] Erro fatal ao criar cliente:', error);
   }
 } else {
-  console.warn('⚠️ Supabase URL ou Key não encontrados no .env. A aplicação funcionará com dados Mock locais.');
+  console.warn('[Supabase Client] ⚠️ Variáveis de ambiente ausentes. O app usará dados Mock.');
 }
 
 export const supabase = client;

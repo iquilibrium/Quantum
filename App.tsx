@@ -6,7 +6,7 @@ import { CoursePlayer } from './components/CoursePlayer';
 import { CertificatePreview } from './components/CertificatePreview';
 import { Profile } from './components/Profile';
 import { AdminPanel } from './components/AdminPanel'; // Import AdminPanel
-import { ViewState, User, Course } from './types';
+import { ViewState, User, Course, Module, Lesson, Material, Quiz, QuizOption } from './types';
 import { MOCK_USER, MOCK_STUDENTS, COURSE_DATA } from './constants';
 import { Button } from './components/Button';
 import { supabase } from './lib/supabaseClient';
@@ -15,9 +15,10 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   
-  // STATUS DE CONEXÃO COM BANCO DE DADOS
+  // STATUS DE CONEXÃO E CARREGAMENTO
   const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error' | 'missing'>('checking');
   const [dbMessage, setDbMessage] = useState('');
+  const [isLoadingCourse, setIsLoadingCourse] = useState(true);
 
   // LIFT COURSE STATE
   const [courseData, setCourseData] = useState<Course>(COURSE_DATA);
@@ -42,33 +43,114 @@ const App: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // TESTE DE CONEXÃO AO INICIAR
+  // --- HELPER: Mapear dados do DB (snake_case) para Frontend (camelCase) ---
+  const mapDatabaseToCourse = (dbCourse: any): Course => {
+    return {
+      id: dbCourse.id,
+      title: dbCourse.title,
+      certificateConfig: dbCourse.certificate_config || COURSE_DATA.certificateConfig,
+      modules: (dbCourse.modules || []).sort((a: any, b: any) => a.order_index - b.order_index).map((mod: any) => ({
+        id: mod.id,
+        title: mod.title,
+        description: mod.description,
+        isLocked: mod.is_locked,
+        isActive: mod.is_active,
+        lessons: (mod.lessons || []).sort((a: any, b: any) => a.order_index - b.order_index).map((less: any) => {
+          // Processar Quiz (Supabase retorna array no join, pegamos o primeiro ou null)
+          let quizData: Quiz = { id: `q_default_${less.id}`, question: 'Quiz não configurado', options: [] };
+          if (less.quiz && Array.isArray(less.quiz) && less.quiz.length > 0) {
+            const q = less.quiz[0];
+            quizData = {
+              id: q.id,
+              question: q.question,
+              options: (q.options || []).map((opt: any) => ({
+                id: opt.id,
+                text: opt.text,
+                isCorrect: opt.is_correct
+              }))
+            };
+          }
+
+          return {
+            id: less.id,
+            title: less.title,
+            description: less.description,
+            videoId: less.video_id,
+            duration: less.duration,
+            content: less.content,
+            isActive: less.is_active,
+            materials: (less.materials || []).map((mat: any) => ({
+              id: mat.id,
+              title: mat.title,
+              url: mat.url,
+              type: mat.type
+            })),
+            quiz: quizData
+          } as Lesson;
+        })
+      }))
+    };
+  };
+
+  // TESTE DE CONEXÃO E BUSCA DE DADOS AO INICIAR
   useEffect(() => {
-    const checkConnection = async () => {
+    const initSystem = async () => {
+      // Pequeno delay para garantir que o cliente tentou inicializar
+      await new Promise(r => setTimeout(r, 500));
+
       if (!supabase) {
         setDbStatus('missing');
-        setDbMessage('Chaves .env não encontradas');
+        setDbMessage('Arquivo .env ausente ou chaves inválidas');
+        setIsLoadingCourse(false);
         return;
       }
 
       try {
-        // Tentamos uma chamada leve ao sistema de Auth para validar a chave e URL
-        const { error } = await supabase.auth.getSession();
-        
-        if (error) {
-          throw error;
+        // 1. Verifica Conexão
+        const { error: authError } = await supabase.auth.getSession();
+        if (authError) throw authError;
+        setDbStatus('connected');
+
+        // 2. Busca Dados do Curso 'c_quantum_full' (ID usado no script SQL)
+        // Usamos uma query profunda para trazer toda a árvore de conteúdo
+        const { data: dbData, error: dbError } = await supabase
+          .from('courses')
+          .select(`
+            id, title, certificate_config,
+            modules (
+              id, title, description, is_locked, is_active, order_index,
+              lessons (
+                id, title, description, video_id, duration, content, is_active, order_index,
+                materials (id, title, url, type),
+                quiz:quizzes (
+                  id, question,
+                  options:quiz_options (id, text, is_correct)
+                )
+              )
+            )
+          `)
+          .eq('id', 'c_quantum_full')
+          .single();
+
+        if (dbError) {
+           console.warn("Curso não encontrado no DB ou erro de query. Usando Mock.", dbError);
+           // Não lança erro fatal, apenas mantém o COURSE_DATA (Mock)
+        } else if (dbData) {
+           console.log("Curso carregado do Supabase com sucesso!", dbData);
+           const mappedCourse = mapDatabaseToCourse(dbData);
+           setCourseData(mappedCourse);
         }
 
-        setDbStatus('connected');
-        setDbMessage('Conexão Supabase OK');
       } catch (err: any) {
-        console.error("Erro de conexão Supabase:", err);
+        console.error("Erro de inicialização:", err);
         setDbStatus('error');
         setDbMessage(err.message || 'Erro de conexão');
+      } finally {
+        setIsLoadingCourse(false);
       }
     };
 
-    checkConnection();
+    initSystem();
   }, []);
 
   // PERSIST USER STATE ON CHANGE
@@ -135,6 +217,8 @@ const App: React.FC = () => {
 
   const handleUpdateCourse = (updatedCourse: Course) => {
     setCourseData(updatedCourse);
+    // TODO: Aqui idealmente salvaríamos de volta no Supabase em uma aplicação real de produção
+    // Por enquanto, atualiza apenas o estado local para experiência fluida
   };
 
   const handleUpdateStudent = (updatedStudent: User) => {
@@ -146,6 +230,24 @@ const App: React.FC = () => {
     setCurrentView('course');
     setIsMobileMenuOpen(false); 
   };
+
+  // --- TELA DE CARREGAMENTO INICIAL ---
+  if (isLoadingCourse) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+         <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mb-6 animate-pulse shadow-lg shadow-brand-500/50">
+             <span className="text-3xl text-white font-bold">Q</span>
+         </div>
+         <h2 className="text-white text-xl font-bold mb-2">Sincronizando Plataforma</h2>
+         <p className="text-slate-400 text-sm mb-6">Conectando ao banco de dados quântico...</p>
+         <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+            <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+         </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -210,14 +312,26 @@ const App: React.FC = () => {
               </div>
             </div>
             {(dbStatus === 'error' || dbStatus === 'missing') && (
-               <p className="text-[10px] text-red-400 mt-2 text-center bg-red-50 dark:bg-slate-900 p-2 rounded border border-red-100 dark:border-slate-700">
-                  {dbMessage}. Verifique seu arquivo <code>.env</code>.
-               </p>
+               <div className="mt-3">
+                 <p className="text-[10px] text-red-400 text-center bg-red-50 dark:bg-slate-900 p-2 rounded border border-red-100 dark:border-slate-700">
+                    {dbMessage}.
+                 </p>
+                 {dbStatus === 'missing' && (
+                    <p className="text-[9px] text-slate-400 text-center mt-1">
+                      Dica: Verifique seu arquivo .env
+                    </p>
+                 )}
+                 {dbStatus === 'error' && (
+                    <p className="text-[9px] text-slate-400 text-center mt-1">
+                      Usando dados locais (Mock) como fallback.
+                    </p>
+                 )}
+               </div>
             )}
           </div>
           
           <p className="text-center text-xs text-slate-400 mt-4">
-            v1.0 • Desenvolvido para PRD Quantum
+            v1.1 • Conectado ao Supabase
           </p>
         </div>
       </div>
