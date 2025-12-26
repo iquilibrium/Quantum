@@ -111,6 +111,13 @@ const App: React.FC = () => {
         if (authError) throw authError;
         setDbStatus('connected');
 
+        if ((import.meta as any).env?.DEV) {
+          const { data: tbls } = await supabase.rpc('list_public_tables');
+          if (tbls) {
+            console.log('DB Tables', tbls);
+          }
+        }
+
         // 2. Busca Dados do Curso 'c_quantum_full' (ID usado no script SQL)
         // Usamos uma query profunda para trazer toda a árvore de conteúdo
         const { data: dbData, error: dbError } = await supabase
