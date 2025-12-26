@@ -278,61 +278,11 @@ const App: React.FC = () => {
                 className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
               />
             </div>
-            <div className="pt-2">
-              <Button type="submit" fullWidth size="lg">Entrar na Plataforma</Button>
-            </div>
-          </form>
-
-          {/* INDICADOR DE STATUS DO SUPABASE */}
-          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Banco de Dados:</span>
-              <div className="flex items-center gap-2">
-                {dbStatus === 'checking' && (
-                  <span className="flex items-center gap-1.5 text-slate-500">
-                     <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                     Verificando...
-                  </span>
-                )}
-                {dbStatus === 'connected' && (
-                  <span className="flex items-center gap-1.5 text-green-600 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">
-                     <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                     </span>
-                     Conectado
-                  </span>
-                )}
-                {(dbStatus === 'error' || dbStatus === 'missing') && (
-                  <span className="flex items-center gap-1.5 text-red-500 font-medium bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full" title={dbMessage}>
-                     <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                     {dbStatus === 'missing' ? 'Config Ausente' : 'Erro de Conexão'}
-                  </span>
-                )}
-              </div>
-            </div>
-            {(dbStatus === 'error' || dbStatus === 'missing') && (
-               <div className="mt-3">
-                 <p className="text-[10px] text-red-400 text-center bg-red-50 dark:bg-slate-900 p-2 rounded border border-red-100 dark:border-slate-700">
-                    {dbMessage}.
-                 </p>
-                 {dbStatus === 'missing' && (
-                    <p className="text-[9px] text-slate-400 text-center mt-1">
-                      Dica: Verifique seu arquivo .env
-                    </p>
-                 )}
-                 {dbStatus === 'error' && (
-                    <p className="text-[9px] text-slate-400 text-center mt-1">
-                      Usando dados locais (Mock) como fallback.
-                    </p>
-                 )}
-               </div>
-            )}
+          <div className="pt-2">
+            <Button type="submit" fullWidth size="lg">Entrar na Plataforma</Button>
           </div>
-          
-          <p className="text-center text-xs text-slate-400 mt-4">
-            v1.1 • Conectado ao Supabase
-          </p>
+        </form>
+
         </div>
       </div>
     );
