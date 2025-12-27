@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -18,7 +17,7 @@ const App: React.FC = () => {
   // STATUS DE CONEXÃO E CARREGAMENTO
   const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error' | 'missing'>('checking');
   const [dbMessage, setDbMessage] = useState('');
-  const [isLoadingCourse, setIsLoadingCourse] = useState(true);
+  // Removido: const [isLoadingCourse, setIsLoadingCourse] = useState(true);
 
   // LIFT COURSE STATE
   const [courseData, setCourseData] = useState<Course>(COURSE_DATA);
@@ -96,12 +95,12 @@ const App: React.FC = () => {
   useEffect(() => {
     const initSystem = async () => {
       // Pequeno delay para garantir que o cliente tentou inicializar
-      await new Promise(r => setTimeout(r, 500));
+      // Removido: await new Promise(r => setTimeout(r, 500));
 
       if (!supabase) {
         setDbStatus('missing');
         setDbMessage('Arquivo .env ausente ou chaves inválidas');
-        setIsLoadingCourse(false);
+        // Removido: setIsLoadingCourse(false);
         return;
       }
 
@@ -153,7 +152,7 @@ const App: React.FC = () => {
         setDbStatus('error');
         setDbMessage(err.message || 'Erro de conexão');
       } finally {
-        setIsLoadingCourse(false);
+        // Removido: setIsLoadingCourse(false);
       }
     };
 
@@ -239,22 +238,22 @@ const App: React.FC = () => {
   };
 
   // --- TELA DE CARREGAMENTO INICIAL ---
-  if (isLoadingCourse) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
-         <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mb-6 animate-pulse shadow-lg shadow-brand-500/50">
-             <span className="text-3xl text-white font-bold">Q</span>
-         </div>
-         <h2 className="text-white text-xl font-bold mb-2">Sincronizando Plataforma</h2>
-         <p className="text-slate-400 text-sm mb-6">Conectando ao banco de dados quântico...</p>
-         <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-            <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-         </div>
-      </div>
-    );
-  }
+  // Removido: if (isLoadingCourse) {
+  // Removido:   return (
+  // Removido:     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+  // Removido:        <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mb-6 animate-pulse shadow-lg shadow-brand-500/50">
+  // Removido:            <span className="text-3xl text-white font-bold">Q</span>
+  // Removido:        </div>
+  // Removido:        <h2 className="text-white text-xl font-bold mb-2">Sincronizando Plataforma</h2>
+  // Removido:        <p className="text-slate-400 text-sm mb-6">Conectando ao banco de dados quântico...</p>
+  // Removido:        <div className="flex items-center gap-2">
+  // Removido:           <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+  // Removido:           <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+  // Removido:           <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+  // Removido:        </div>
+  // Removido:     </div>
+  // Removido:   );
+  // Removido: }
 
   if (!isAuthenticated) {
     return (
