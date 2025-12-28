@@ -1,22 +1,25 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Course, Module, Lesson, QuizOption, User, CertificateConfig, Material } from '../types';
 import { Button } from './Button';
 import { Certificate } from './Certificate';
 import { supabase } from '../lib/supabaseClient'; // Import Client
+import { AddStudentModal } from './AddStudentModal'; // Importar o novo modal
+import { showSuccess, showError, showLoading, dismissToast } from '../utils/toast'; // Importar toasts
 
 interface AdminPanelProps {
   course: Course;
   students: User[]; // Lista de todos os alunos
   onUpdateCourse: (updatedCourse: Course) => void;
   onUpdateStudent: (updatedStudent: User) => void; // Função para ativar/desativar aluno
+  onAddStudent: (studentData: { name: string; email: string; password: string; avatarUrl?: string }) => Promise<void>; // Nova prop
 }
 
-export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpdateCourse, onUpdateStudent }) => {
+export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpdateCourse, onUpdateStudent, onAddStudent }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'students' | 'certificate' | 'database'>('students');
 
   // --- LOADING STATE ---
   const [isLoadingStudents, setIsLoadingStudents] = useState(true);
+  const [isAddingStudent, setIsAddingStudent] = useState(false); // Novo estado para o modal de aluno
 
   // --- SEARCH STATE ---
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
@@ -28,6 +31,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   // --- DRAG AND DROP STATE ---
   const [draggedModuleIdx, setDraggedModuleIdx] = useState<number | null>(null);
   const [draggedLessonInfo, setDraggedLessonInfo] = useState<{ modIdx: number, lessIdx: number } | null>(null);
+
+  // --- ADD STUDENT MODAL STATE ---
+  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
 
   useEffect(() => {
     // Simula um delay de rede ao carregar o componente para exibir o spinner
@@ -299,6 +305,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
       onUpdateStudent({ ...student, isActive: !student.isActive });
   };
 
+  const handleAddStudentSubmit = async (studentData: { name: string; email: string; password: string; avatarUrl?: string }) => {
+    setIsAddingStudent(true);
+    const toastId = showLoading('Cadastrando novo aluno...');
+    try {
+      await onAddStudent(studentData);
+      showSuccess('Aluno cadastrado com sucesso!');
+      setIsAddStudentModalOpen(false);
+    } catch (error: any) {
+      showError(`Erro ao cadastrar aluno: ${error.message}`);
+    } finally {
+      dismissToast(toastId);
+      setIsAddingStudent(false);
+    }
+  };
+
   const totalStudents = students.length;
   const activeStudents = students.filter(s => s.isActive).length;
   const totalXP = students.reduce((acc, s) => acc + s.points, 0);
@@ -321,6 +342,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
             </div>
             <div className="flex gap-2 mt-4 md:mt-0">
                {activeTab === 'content' && <Button onClick={() => openModuleModal()}>+ Novo Módulo</Button>}
+               {activeTab === 'students' && <Button onClick={() => setIsAddStudentModalOpen(true)}>+ Cadastrar Novo Aluno</Button>} {/* Novo Botão */}
             </div>
          </div>
          
@@ -1062,6 +1084,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
           </div>
         </div>
       )}
+
+      {/* Add Student Modal */}
+      <AddStudentModal
+        isOpen={isAddStudentModalOpen}
+        onClose={() => setIsAddStudentModalOpen(false)}
+        onAddStudent={handleAddStudentSubmit}
+        isLoading={isAddingStudent}
+      />
     </div>
   );
 };

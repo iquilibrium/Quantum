@@ -9,6 +9,7 @@ import { ViewState, User, Course, Module, Lesson, Material, Quiz, QuizOption } f
 import { MOCK_USER, MOCK_STUDENTS, COURSE_DATA } from './constants';
 import { Button } from './components/Button';
 import { supabase } from './lib/supabaseClient';
+import { showSuccess, showError, showLoading, dismissToast } from './utils/toast'; // Importar toasts
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -147,6 +148,34 @@ const App: React.FC = () => {
            setCourseData(mappedCourse);
         }
 
+        // 3. Carregar lista de alunos do Supabase
+        const { data: dbStudents, error: studentsError } = await supabase
+          .from('profiles')
+          .select('*');
+
+        if (studentsError) {
+          console.error("Erro ao carregar alunos do Supabase:", studentsError);
+          // Mantém os alunos mockados se houver erro
+        } else if (dbStudents) {
+          // Mapear dados do DB para o tipo User
+          const mappedStudents: User[] = dbStudents.map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            email: s.email,
+            avatarUrl: s.avatar_url || 'https://i.pravatar.cc/150?img=68', // Default avatar
+            role: s.role,
+            isActive: s.is_active,
+            progress: s.progress,
+            points: s.points,
+            level: s.level,
+            badges: s.badges,
+            completedLessons: [], // Supondo que completedLessons será carregado separadamente ou é mockado
+            lastAccess: s.last_access ? new Date(s.last_access).toLocaleDateString('pt-BR') : 'N/A'
+          }));
+          setStudents(mappedStudents);
+        }
+
+
       } catch (err: any) {
         console.error("Erro de inicialização:", err);
         setDbStatus('error');
@@ -229,6 +258,61 @@ const App: React.FC = () => {
 
   const handleUpdateStudent = (updatedStudent: User) => {
     setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
+  };
+
+  const handleAddStudent = async (studentData: { name: string; email: string; password: string; avatarUrl?: string }) => {
+    if (!supabase) {
+      throw new Error("Supabase client not initialized.");
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: studentData.email,
+      password: studentData.password,
+      options: {
+        data: {
+          full_name: studentData.name,
+          avatar_url: studentData.avatarUrl || 'https://i.pravatar.cc/150?img=68', // Default avatar
+        },
+      },
+    });
+
+    if (error) {
+      console.error("Erro ao cadastrar aluno no Supabase:", error);
+      throw error;
+    }
+
+    if (data.user) {
+      // O trigger handle_new_user já deve ter criado o perfil.
+      // Agora, buscamos o perfil recém-criado para adicioná-lo ao estado local.
+      const { data: newProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError) {
+        console.error("Erro ao buscar perfil do novo aluno:", profileError);
+        throw profileError;
+      }
+
+      if (newProfile) {
+        const newUser: User = {
+          id: newProfile.id,
+          name: newProfile.name,
+          email: newProfile.email,
+          avatarUrl: newProfile.avatar_url || 'https://i.pravatar.cc/150?img=68',
+          role: newProfile.role,
+          isActive: newProfile.is_active,
+          progress: newProfile.progress,
+          points: newProfile.points,
+          level: newProfile.level,
+          badges: newProfile.badges,
+          completedLessons: [], // Novos alunos não têm aulas completas
+          lastAccess: newProfile.last_access ? new Date(newProfile.last_access).toLocaleDateString('pt-BR') : 'N/A'
+        };
+        setStudents(prev => [...prev, newUser]);
+      }
+    }
   };
 
   const handleSelectLessonFromSidebar = (mIndex: number, lIndex: number) => {
@@ -382,6 +466,7 @@ const App: React.FC = () => {
               students={students}
               onUpdateCourse={handleUpdateCourse} 
               onUpdateStudent={handleUpdateStudent}
+              onAddStudent={handleAddStudent} // Passando a nova função
             />
           </div>
         )}
