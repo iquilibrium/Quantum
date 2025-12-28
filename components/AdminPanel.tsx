@@ -41,6 +41,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     courseCoverUrl: course.courseCoverUrl || ''
   });
   const [showCourseSaveSuccess, setShowCourseSaveSuccess] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false); // Novo estado para upload da capa
+  const [uploadCoverProgress, setUploadCoverProgress] = useState(0); // Progresso do upload da capa
+  const fileInputCoverRef = useRef<HTMLInputElement>(null); // Ref para o input de arquivo da capa
 
   useEffect(() => {
     // Simula um delay de rede ao carregar o componente para exibir o spinner
@@ -123,6 +126,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
             });
         }
 
+        // 3. Check Storage Bucket (course-covers)
+        const { data: listData, error: listError } = await supabase.storage.from('course-covers').list();
+        results.push({
+            name: 'Storage Bucket: course-covers',
+            status: listError ? 'Erro' : 'OK',
+            message: listError ? listError.message : 'Acessível'
+        });
+
+
     } catch (e: any) {
         results.push({ name: 'Diagnóstico Crítico', status: 'Erro Fatal', message: e.message });
     }
@@ -174,11 +186,80 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   const handleCourseSettingsChange = (field: keyof typeof courseSettingsForm, value: string) => {
     setCourseSettingsForm(prev => ({ ...prev, [field]: value }));
   };
-  const handleSaveCourseSettings = () => {
-    onUpdateCourse({ ...course, title: courseSettingsForm.title, courseCoverUrl: courseSettingsForm.courseCoverUrl });
-    setShowCourseSaveSuccess(true);
-    setTimeout(() => setShowCourseSaveSuccess(false), 3000);
+  const handleSaveCourseSettings = async () => {
+    const toastId = showLoading('Salvando configurações do curso...');
+    try {
+      // Atualiza o curso no Supabase
+      const { error } = await supabase
+        .from('courses')
+        .update({ 
+          title: courseSettingsForm.title, 
+          course_cover_url: courseSettingsForm.courseCoverUrl 
+        })
+        .eq('id', course.id); // Assume que o curso tem um ID fixo 'c_quantum_full'
+
+      if (error) throw error;
+
+      onUpdateCourse({ ...course, title: courseSettingsForm.title, courseCoverUrl: courseSettingsForm.courseCoverUrl });
+      showSuccess('Configurações do curso salvas com sucesso!');
+      setShowCourseSaveSuccess(true);
+      setTimeout(() => setShowCourseSaveSuccess(false), 3000);
+    } catch (error: any) {
+      showError(`Erro ao salvar configurações: ${error.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
   };
+
+  const handleCourseCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!supabase) {
+      showError('Supabase client não inicializado. Verifique suas variáveis de ambiente.');
+      return;
+    }
+
+    setIsUploadingCover(true);
+    setUploadCoverProgress(0);
+    const toastId = showLoading('Enviando imagem da capa...');
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `course_covers/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('course-covers')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          // onUploadProgress is not directly supported by the client-side upload method
+          // For real progress, you'd need a more complex setup (e.g., serverless function)
+        });
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('course-covers')
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData || !publicUrlData.publicUrl) throw new Error('Não foi possível obter a URL pública da imagem.');
+
+      setCourseSettingsForm(prev => ({ ...prev, courseCoverUrl: publicUrlData.publicUrl }));
+      showSuccess('Imagem da capa enviada com sucesso!');
+      setUploadCoverProgress(100); // Simula 100% ao finalizar
+    } catch (error: any) {
+      showError(`Erro ao enviar imagem: ${error.message}`);
+      setUploadCoverProgress(0);
+    } finally {
+      dismissToast(toastId);
+      setIsUploadingCover(false);
+      if (fileInputCoverRef.current) fileInputCoverRef.current.value = ''; // Limpa o input
+    }
+  };
+
   const toggleModuleStatus = (module: Module) => {
       const newModules = course.modules.map(m => m.id === module.id ? { ...m, isActive: !m.isActive } : m);
       onUpdateCourse({ ...course, modules: newModules });
@@ -645,13 +726,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1">URL da Imagem de Capa</label>
-                  <input 
-                    className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                    value={courseSettingsForm.courseCoverUrl}
-                    onChange={e => handleCourseSettingsChange('courseCoverUrl', e.target.value)}
-                    placeholder="https://exemplo.com/capa-do-curso.jpg"
-                  />
+                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Imagem de Capa</label>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="file"
+                      ref={fileInputCoverRef}
+                      onChange={handleCourseCoverUpload}
+                      className="hidden"
+                      accept="image/*"
+                      disabled={isUploadingCover}
+                    />
+                    <Button 
+                      onClick={() => fileInputCoverRef.current?.click()}
+                      variant="outline"
+                      size="sm"
+                      disabled={isUploadingCover}
+                      className="flex-shrink-0 dark:border-slate-600 dark:text-slate-300"
+                    >
+                      {isUploadingCover ? 'Enviando...' : 'Escolher Imagem'}
+                    </Button>
+                    <input 
+                      className="flex-1 border rounded-lg px-3 py-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                      value={courseSettingsForm.courseCoverUrl}
+                      onChange={e => handleCourseSettingsChange('courseCoverUrl', e.target.value)}
+                      placeholder="URL da imagem de capa"
+                      readOnly={isUploadingCover}
+                    />
+                  </div>
+                  {isUploadingCover && (
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-2">
+                      <div 
+                        className="bg-brand-600 h-full rounded-full transition-all duration-150 ease-linear" 
+                        style={{ width: `${uploadCoverProgress}%` }}
+                      />
+                    </div>
+                  )}
                   {courseSettingsForm.courseCoverUrl && (
                     <div className="mt-4">
                       <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Pré-visualização:</p>
@@ -666,6 +775,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                   onClick={handleSaveCourseSettings} 
                   fullWidth 
                   className="flex items-center justify-center gap-2"
+                  disabled={isUploadingCover}
                 >
                   {showCourseSaveSuccess ? (
                       <>
