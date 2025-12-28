@@ -4,7 +4,7 @@ import { Button } from './Button';
 import { Certificate } from './Certificate';
 import { supabase } from '../lib/supabaseClient'; // Import Client
 import { AddStudentModal } from './AddStudentModal'; // Importar o novo modal
-import { showSuccess, showError, showLoading, dismissToast } from '../utils/toast'; // Importar toasts
+import { showSuccess, showError, showLoading, dismissToast } from '../src/utils/toast'; // Caminho corrigido
 
 interface AdminPanelProps {
   course: Course;
