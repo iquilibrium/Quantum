@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   name: string;
@@ -70,6 +69,7 @@ export interface Course {
   title: string;
   modules: Module[];
   certificateConfig: CertificateConfig; // Novo campo de configuração
+  courseCoverUrl?: string; // Novo campo para a imagem de capa do curso
 }
 
 export type ViewState = 'dashboard' | 'course' | 'admin' | 'profile' | 'certificate';

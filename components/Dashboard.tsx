@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { User, Course, Module, Lesson, Material } from '../types';
 import { Button } from './Button';
@@ -210,14 +208,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, course, onResume }) 
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col md:flex-row transition-colors group hover:shadow-md duration-300">
           <div className="md:w-1/3 bg-slate-900 relative h-48 md:h-auto overflow-hidden">
              <img 
-               src="https://picsum.photos/600/400" 
+               src={course.courseCoverUrl || "https://picsum.photos/600/400"} 
                alt="Course cover" 
                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
              />
              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
              <div className="absolute bottom-6 left-6 text-white pr-4">
                <span className="bg-brand-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide shadow-sm mb-2 inline-block">
-                  {activeModule.title.split(':')[0]}
+                  Curso {/* Alterado de activeModule.title.split(':')[0] para "Curso" */}
                </span>
                <h3 className="text-xl font-bold leading-tight">{course.title}</h3>
              </div>

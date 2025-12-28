@@ -1,5 +1,3 @@
-
-
 import { Course, User } from './types';
 
 export const MOCK_USER: User = {
@@ -66,6 +64,7 @@ export const MOCK_STUDENTS: User[] = [
 export const COURSE_DATA: Course = {
   id: 'c_quantum_full',
   title: 'Mecânica Quântica, Vibração e as 7 Leis Herméticas',
+  courseCoverUrl: 'https://images.unsplash.com/photo-1518066000714-cdcd82ab5959?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Nova imagem de capa
   certificateConfig: {
     title: 'Certificado',
     subtitle: 'de conclusão',

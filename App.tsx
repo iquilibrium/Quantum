@@ -48,6 +48,7 @@ const App: React.FC = () => {
     return {
       id: dbCourse.id,
       title: dbCourse.title,
+      courseCoverUrl: dbCourse.course_cover_url, // Mapear o novo campo
       certificateConfig: dbCourse.certificate_config || COURSE_DATA.certificateConfig,
       modules: (dbCourse.modules || []).sort((a: any, b: any) => a.order_index - b.order_index).map((mod: any) => ({
         id: mod.id,
@@ -123,7 +124,7 @@ const App: React.FC = () => {
         const { data: dbData, error: dbError } = await supabase
           .from('courses')
           .select(`
-            id, title, certificate_config,
+            id, title, course_cover_url, certificate_config,
             modules (
               id, title, description, is_locked, is_active, order_index,
               lessons (
@@ -169,7 +170,7 @@ const App: React.FC = () => {
             points: s.points,
             level: s.level,
             badges: s.badges,
-            completedLessons: [], // Supondo que completedLessons será carregado separadamente ou é mockado
+            completedLessons: [], // Novos alunos não têm aulas completas
             lastAccess: s.last_access ? new Date(s.last_access).toLocaleDateString('pt-BR') : 'N/A'
           }));
           setStudents(mappedStudents);

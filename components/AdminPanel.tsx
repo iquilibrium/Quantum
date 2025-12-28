@@ -4,7 +4,7 @@ import { Button } from './Button';
 import { Certificate } from './Certificate';
 import { supabase } from '../lib/supabaseClient'; // Import Client
 import { AddStudentModal } from './AddStudentModal'; // Importar o novo modal
-import { showSuccess, showError, showLoading, dismissToast } from '../src/utils/toast'; // Caminho corrigido
+import { showSuccess, showError, showLoading, dismissToast } from '../src/utils/toast'; // Importar toasts
 
 interface AdminPanelProps {
   course: Course;
@@ -15,7 +15,7 @@ interface AdminPanelProps {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpdateCourse, onUpdateStudent, onAddStudent }) => {
-  const [activeTab, setActiveTab] = useState<'content' | 'students' | 'certificate' | 'database'>('students');
+  const [activeTab, setActiveTab] = useState<'content' | 'students' | 'certificate' | 'database' | 'courseSettings'>('students');
 
   // --- LOADING STATE ---
   const [isLoadingStudents, setIsLoadingStudents] = useState(true);
@@ -35,6 +35,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
   // --- ADD STUDENT MODAL STATE ---
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
 
+  // --- COURSE SETTINGS STATE ---
+  const [courseSettingsForm, setCourseSettingsForm] = useState({
+    title: course.title,
+    courseCoverUrl: course.courseCoverUrl || ''
+  });
+  const [showCourseSaveSuccess, setShowCourseSaveSuccess] = useState(false);
+
   useEffect(() => {
     // Simula um delay de rede ao carregar o componente para exibir o spinner
     const timer = setTimeout(() => {
@@ -42,6 +49,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     }, 1200);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    setCourseSettingsForm({
+      title: course.title,
+      courseCoverUrl: course.courseCoverUrl || ''
+    });
+  }, [course.title, course.courseCoverUrl]);
 
   // --- CONTENT MANAGEMENT STATES ---
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
@@ -156,6 +170,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     onUpdateCourse({ ...course, certificateConfig: certForm });
     setShowSaveSuccess(true);
     setTimeout(() => setShowSaveSuccess(false), 3000);
+  };
+  const handleCourseSettingsChange = (field: keyof typeof courseSettingsForm, value: string) => {
+    setCourseSettingsForm(prev => ({ ...prev, [field]: value }));
+  };
+  const handleSaveCourseSettings = () => {
+    onUpdateCourse({ ...course, title: courseSettingsForm.title, courseCoverUrl: courseSettingsForm.courseCoverUrl });
+    setShowCourseSaveSuccess(true);
+    setTimeout(() => setShowCourseSaveSuccess(false), 3000);
   };
   const toggleModuleStatus = (module: Module) => {
       const newModules = course.modules.map(m => m.id === module.id ? { ...m, isActive: !m.isActive } : m);
@@ -358,6 +380,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
                 className={`pb-4 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${activeTab === 'content' ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
              >
                 Gerenciar Conteúdo
+             </button>
+             <button 
+                onClick={() => setActiveTab('courseSettings')} // Nova aba
+                className={`pb-4 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${activeTab === 'courseSettings' ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+             >
+                Configurações do Curso
              </button>
              <button 
                 onClick={() => setActiveTab('certificate')}
@@ -599,6 +627,58 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
               </div>
             ))}
            </div>
+        )}
+
+        {/* --- COURSE SETTINGS TAB (NEW) --- */}
+        {activeTab === 'courseSettings' && (
+          <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Informações Gerais do Curso</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Título do Curso</label>
+                  <input 
+                    className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                    value={courseSettingsForm.title}
+                    onChange={e => handleCourseSettingsChange('title', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-400 mb-1">URL da Imagem de Capa</label>
+                  <input 
+                    className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                    value={courseSettingsForm.courseCoverUrl}
+                    onChange={e => handleCourseSettingsChange('courseCoverUrl', e.target.value)}
+                    placeholder="https://exemplo.com/capa-do-curso.jpg"
+                  />
+                  {courseSettingsForm.courseCoverUrl && (
+                    <div className="mt-4">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Pré-visualização:</p>
+                      <img src={courseSettingsForm.courseCoverUrl} alt="Capa do Curso" className="w-full h-32 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <Button 
+                  onClick={handleSaveCourseSettings} 
+                  fullWidth 
+                  className="flex items-center justify-center gap-2"
+                >
+                  {showCourseSaveSuccess ? (
+                      <>
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        Salvo com Sucesso!
+                      </>
+                  ) : (
+                      "Salvar Configurações do Curso"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* --- CERTIFICATE TAB --- */}
