@@ -60,12 +60,32 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- Função para listar tabelas públicas (com segurança aprimorada)
+CREATE OR REPLACE FUNCTION public.list_public_tables()
+ RETURNS SETOF text
+ LANGUAGE plpgsql
+ SECURITY DEFINER SET search_path = '' -- Adicionado para segurança
+AS $function$
+DECLARE
+    table_name TEXT;
+BEGIN
+    FOR table_name IN
+        SELECT relname
+        FROM pg_class
+        WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+          AND relkind = 'r' -- 'r' para tabela comum
+    LOOP
+        RETURN NEXT table_name;
+    END LOOP;
+END;
+$function$;
+
 -- Tabela de Cursos
 CREATE TABLE IF NOT EXISTS public.courses (
   id TEXT NOT NULL PRIMARY KEY,
   title TEXT NOT NULL,
   course_cover_url TEXT,
-  certificate_config JSONB -- Esta coluna já está na definição, mas pode não ter sido adicionada se a tabela já existia
+  certificate_config JSONB
 );
 
 -- Adicionar a coluna certificate_config se ela não existir (para tabelas já existentes)
