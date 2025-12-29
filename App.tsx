@@ -13,8 +13,22 @@ import { supabase } from './src/integrations/supabase/client'; // Corrected path
 import { showSuccess, showError, showLoading, dismissToast } from './src/utils/toast'; // Corrected path
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Global loading state
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('quantum_user_v1');
+      return !!savedUser;
+    }
+    return false;
+  });
+
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('quantum_user_v1');
+      return savedUser ? JSON.parse(savedUser) : null;
+    }
+    return null;
+  });
+
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
 
   const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error' | 'missing'>('checking');
@@ -22,7 +36,7 @@ const App: React.FC = () => {
 
   const [courseData, setCourseData] = useState<Course>(COURSE_DATA);
 
-  const [user, setUser] = useState<User | null>(null); // User can be null initially
+  // const [user, setUser] = useState<User | null>(null); // User hydrated above
 
   const [students, setStudents] = useState<User[]>(MOCK_STUDENTS);
 
@@ -98,7 +112,8 @@ const App: React.FC = () => {
       if (session) {
         setIsAuthenticated(true);
         if (!supabase) return;
-        // Fetch user profile from 'profiles' table
+
+        // Background sync: Fetch user profile to ensure data is up to date
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -151,7 +166,6 @@ const App: React.FC = () => {
         // If we are just starting, we might want to wait a bit or just stop.
         // Usually, if no session, we show login.
       }
-      setIsLoading(false); // Stop loading after checks
     });
 
     return () => {
@@ -436,16 +450,8 @@ const App: React.FC = () => {
     setIsMobileMenuOpen(false);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin"></div>
-          <p className="text-brand-700 dark:text-brand-300 font-medium animate-pulse">Carregando Quantum...</p>
-        </div>
-      </div>
-    );
-  }
+  // REMOVED LOADER FOR IMMEDIATE ACCESS
+  // if (isLoading) { ... }
 
   if (!isAuthenticated || !user) {
     return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
