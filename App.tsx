@@ -4,51 +4,43 @@ import { Dashboard } from './components/Dashboard';
 import { CoursePlayer } from './components/CoursePlayer';
 import { CertificatePreview } from './components/CertificatePreview';
 import { Profile } from './components/Profile';
-import { AdminPanel } from './components/AdminPanel'; // Import AdminPanel
+import { AdminPanel } from './components/AdminPanel';
+import LoginPage from './src/pages/Login'; // Import the new Login page
 import { ViewState, User, Course, Module, Lesson, Material, Quiz, QuizOption } from './types';
 import { MOCK_USER, MOCK_STUDENTS, COURSE_DATA } from './constants';
 import { Button } from './components/Button';
-import { supabase } from './lib/supabaseClient';
-import { showSuccess, showError, showLoading, dismissToast } from './utils/toast'; // Importar toasts
+import { supabase } from './src/integrations/supabase/client'; // Corrected path
+import { showSuccess, showError, showLoading, dismissToast } from './utils/toast';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   
-  // STATUS DE CONEXÃO E CARREGAMENTO
   const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error' | 'missing'>('checking');
   const [dbMessage, setDbMessage] = useState('');
-  // Removido: const [isLoadingCourse, setIsLoadingCourse] = useState(true);
 
-  // LIFT COURSE STATE
   const [courseData, setCourseData] = useState<Course>(COURSE_DATA);
 
-  // INITIALIZE USER STATE WITH PERSISTENCE
-  // Tenta carregar do localStorage ou usa o MOCK_USER como fallback
-  const [user, setUser] = useState<User>(() => {
-    const savedUser = localStorage.getItem('quantum_user_v1');
-    if (savedUser) {
-      try {
-        return JSON.parse(savedUser);
-      } catch (e) {
-        console.error("Erro ao carregar usuário salvo", e);
-      }
-    }
-    return { ...MOCK_USER, role: 'coordinator' }; // Default para demo
-  });
+  const [user, setUser] = useState<User | null>(null); // User can be null initially
 
-  // State for List of Students (Admin View)
   const [students, setStudents] = useState<User[]>(MOCK_STUDENTS);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  });
+  
+  const [activeLessonCoords, setActiveLessonCoords] = useState<{mIndex: number, lIndex: number} | null>(null);
 
   // --- HELPER: Mapear dados do DB (snake_case) para Frontend (camelCase) ---
   const mapDatabaseToCourse = (dbCourse: any): Course => {
     return {
       id: dbCourse.id,
       title: dbCourse.title,
-      courseCoverUrl: dbCourse.course_cover_url, // Mapear o novo campo
+      courseCoverUrl: dbCourse.course_cover_url,
       certificateConfig: dbCourse.certificate_config || COURSE_DATA.certificateConfig,
       modules: (dbCourse.modules || []).sort((a: any, b: any) => a.order_index - b.order_index).map((mod: any) => ({
         id: mod.id,
@@ -57,7 +49,6 @@ const App: React.FC = () => {
         isLocked: mod.is_locked,
         isActive: mod.is_active,
         lessons: (mod.lessons || []).sort((a: any, b: any) => a.order_index - b.order_index).map((less: any) => {
-          // Processar Quiz (Supabase retorna array no join, pegamos o primeiro ou null)
           let quizData: Quiz = { id: `q_default_${less.id}`, question: 'Quiz não configurado', options: [] };
           if (less.quiz && Array.isArray(less.quiz) && less.quiz.length > 0) {
             const q = less.quiz[0];
@@ -93,23 +84,80 @@ const App: React.FC = () => {
     };
   };
 
+  // --- AUTH STATE LISTENER ---
+  useEffect(() => {
+    if (!supabase) {
+      setDbStatus('missing');
+      setDbMessage('Supabase client not initialized. Check your .env variables.');
+      return;
+    }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        setIsAuthenticated(true);
+        // Fetch user profile from 'profiles' table
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+          showError("Erro ao carregar perfil do usuário.");
+          // Fallback to a basic user if profile not found
+          setUser({
+            id: session.user.id,
+            name: session.user.user_metadata.full_name || session.user.email || 'Usuário',
+            email: session.user.email || '',
+            avatarUrl: session.user.user_metadata.avatar_url || 'https://i.pravatar.cc/150?img=68',
+            role: 'student', // Default role
+            isActive: true,
+            progress: 0,
+            points: 0,
+            level: 1,
+            badges: [],
+            completedLessons: [],
+            lastAccess: new Date().toLocaleDateString('pt-BR')
+          });
+        } else if (profile) {
+          setUser({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            avatarUrl: profile.avatar_url || 'https://i.pravatar.cc/150?img=68',
+            role: profile.role,
+            isActive: profile.is_active,
+            progress: profile.progress,
+            points: profile.points,
+            level: profile.level,
+            badges: profile.badges,
+            completedLessons: [], // TODO: Fetch from user_progress table
+            lastAccess: profile.last_access ? new Date(profile.last_access).toLocaleDateString('pt-BR') : 'N/A'
+          });
+        }
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+
   // TESTE DE CONEXÃO E BUSCA DE DADOS AO INICIAR
   useEffect(() => {
     const initSystem = async () => {
-      // Pequeno delay para garantir que o cliente tentou inicializar
-      // Removido: await new Promise(r => setTimeout(r, 500));
-
       if (!supabase) {
         setDbStatus('missing');
         setDbMessage('Arquivo .env ausente ou chaves inválidas');
-        // Removido: setIsLoadingCourse(false);
         return;
       }
 
       try {
-        // 1. Verifica Conexão
-        const { error: authError } = await supabase.auth.getSession();
-        if (authError) throw authError;
         setDbStatus('connected');
 
         if ((import.meta as any).env?.DEV) {
@@ -119,8 +167,6 @@ const App: React.FC = () => {
           }
         }
 
-        // 2. Busca Dados do Curso 'c_quantum_full' (ID usado no script SQL)
-        // Usamos uma query profunda para trazer toda a árvore de conteúdo
         const { data: dbData, error: dbError } = await supabase
           .from('courses')
           .select(`
@@ -142,56 +188,53 @@ const App: React.FC = () => {
 
         if (dbError) {
            console.warn("Curso não encontrado no DB ou erro de query. Usando Mock.", dbError);
-           // Não lança erro fatal, apenas mantém o COURSE_DATA (Mock)
         } else if (dbData) {
            console.log("Curso carregado do Supabase com sucesso!", dbData);
            const mappedCourse = mapDatabaseToCourse(dbData);
            setCourseData(mappedCourse);
         }
 
-        // 3. Carregar lista de alunos do Supabase
         const { data: dbStudents, error: studentsError } = await supabase
           .from('profiles')
           .select('*');
 
         if (studentsError) {
           console.error("Erro ao carregar alunos do Supabase:", studentsError);
-          // Mantém os alunos mockados se houver erro
         } else if (dbStudents) {
-          // Mapear dados do DB para o tipo User
           const mappedStudents: User[] = dbStudents.map((s: any) => ({
             id: s.id,
             name: s.name,
             email: s.email,
-            avatarUrl: s.avatar_url || 'https://i.pravatar.cc/150?img=68', // Default avatar
+            avatarUrl: s.avatar_url || 'https://i.pravatar.cc/150?img=68',
             role: s.role,
             isActive: s.is_active,
             progress: s.progress,
             points: s.points,
             level: s.level,
             badges: s.badges,
-            completedLessons: [], // Novos alunos não têm aulas completas
+            completedLessons: [],
             lastAccess: s.last_access ? new Date(s.last_access).toLocaleDateString('pt-BR') : 'N/A'
           }));
           setStudents(mappedStudents);
         }
 
-
       } catch (err: any) {
         console.error("Erro de inicialização:", err);
         setDbStatus('error');
         setDbMessage(err.message || 'Erro de conexão');
-      } finally {
-        // Removido: setIsLoadingCourse(false);
       }
     };
 
     initSystem();
   }, []);
 
-  // PERSIST USER STATE ON CHANGE
+  // PERSIST USER STATE ON CHANGE (if user is logged in)
   useEffect(() => {
-    localStorage.setItem('quantum_user_v1', JSON.stringify(user));
+    if (user) {
+      localStorage.setItem('quantum_user_v1', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('quantum_user_v1');
+    }
   }, [user]);
 
   useEffect(() => {
@@ -206,55 +249,47 @@ const App: React.FC = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
   
-  const [activeLessonCoords, setActiveLessonCoords] = useState<{mIndex: number, lIndex: number} | null>(null);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentView('dashboard');
-    setIsMobileMenuOpen(false);
-  };
-
-  // LÓGICA DE PROGRESSO REAL E DINÂMICO
-  const handleCompleteLesson = (lessonId: string) => {
-    if (!user.completedLessons.includes(lessonId)) {
-      
-      // 1. Calcula o total de aulas ativas no curso
-      const totalLessons = courseData.modules.reduce((acc, mod) => {
-         return acc + (mod.isActive ? mod.lessons.filter(l => l.isActive).length : 0);
-      }, 0);
-
-      // 2. Adiciona a nova aula concluída
-      const newCompletedList = [...user.completedLessons, lessonId];
-
-      // 3. Calcula a nova porcentagem (0 a 100)
-      // Evita divisão por zero caso o curso esteja vazio
-      const newProgress = totalLessons > 0 
-        ? Math.round((newCompletedList.length / totalLessons) * 100) 
-        : 0;
-
-      // 4. Atualiza o estado global (que atualiza Sidebar e Dashboard via props)
-      setUser(prev => ({
-        ...prev,
-        completedLessons: newCompletedList,
-        points: prev.points + 50, // Sistema de Gamificação (XP fixo por aula)
-        progress: Math.min(newProgress, 100)
-      }));
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      showError("Erro ao fazer logout: " + error.message);
+    } else {
+      showSuccess("Logout realizado com sucesso!");
+      setCurrentView('dashboard');
+      setIsMobileMenuOpen(false);
+      setUser(null); // Clear user state on logout
     }
   };
 
+  const handleCompleteLesson = (lessonId: string) => {
+    if (!user || user.completedLessons.includes(lessonId)) {
+      return;
+    }
+      
+    const totalLessons = courseData.modules.reduce((acc, mod) => {
+        return acc + (mod.isActive ? mod.lessons.filter(l => l.isActive).length : 0);
+    }, 0);
+
+    const newCompletedList = [...user.completedLessons, lessonId];
+
+    const newProgress = totalLessons > 0 
+      ? Math.round((newCompletedList.length / totalLessons) * 100) 
+      : 0;
+
+    setUser(prev => prev ? ({
+      ...prev,
+      completedLessons: newCompletedList,
+      points: prev.points + 50,
+      progress: Math.min(newProgress, 100)
+    }) : null);
+  };
+
   const handleUpdateUser = (data: Partial<User>) => {
-    setUser(prev => ({ ...prev, ...data }));
+    setUser(prev => prev ? ({ ...prev, ...data }) : null);
   };
 
   const handleUpdateCourse = (updatedCourse: Course) => {
     setCourseData(updatedCourse);
-    // TODO: Aqui idealmente salvaríamos de volta no Supabase em uma aplicação real de produção
-    // Por enquanto, atualiza apenas o estado local para experiência fluida
   };
 
   const handleUpdateStudent = (updatedStudent: User) => {
@@ -272,7 +307,7 @@ const App: React.FC = () => {
       options: {
         data: {
           full_name: studentData.name,
-          avatar_url: studentData.avatarUrl || 'https://i.pravatar.cc/150?img=68', // Default avatar
+          avatar_url: studentData.avatarUrl || 'https://i.pravatar.cc/150?img=68',
         },
       },
     });
@@ -283,8 +318,6 @@ const App: React.FC = () => {
     }
 
     if (data.user) {
-      // O trigger handle_new_user já deve ter criado o perfil.
-      // Agora, buscamos o perfil recém-criado para adicioná-lo ao estado local.
       const { data: newProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -308,7 +341,7 @@ const App: React.FC = () => {
           points: newProfile.points,
           level: newProfile.level,
           badges: newProfile.badges,
-          completedLessons: [], // Novos alunos não têm aulas completas
+          completedLessons: [],
           lastAccess: newProfile.last_access ? new Date(newProfile.last_access).toLocaleDateString('pt-BR') : 'N/A'
         };
         setStudents(prev => [...prev, newUser]);
@@ -322,61 +355,8 @@ const App: React.FC = () => {
     setIsMobileMenuOpen(false); 
   };
 
-  // --- TELA DE CARREGAMENTO INICIAL ---
-  // Removido: if (isLoadingCourse) {
-  // Removido:   return (
-  // Removido:     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
-  // Removido:        <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mb-6 animate-pulse shadow-lg shadow-brand-500/50">
-  // Removido:            <span className="text-3xl text-white font-bold">Q</span>
-  // Removido:        </div>
-  // Removido:        <h2 className="text-white text-xl font-bold mb-2">Sincronizando Plataforma</h2>
-  // Removido:        <p className="text-slate-400 text-sm mb-6">Conectando ao banco de dados quântico...</p>
-  // Removido:        <div className="flex items-center gap-2">
-  // Removido:           <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-  // Removido:           <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-  // Removido:           <div className="w-2 h-2 bg-brand-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-  // Removido:        </div>
-  // Removido:     </div>
-  // Removido:   );
-  // Removido: }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4 transition-colors duration-200">
-        <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-700">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-brand-600 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-brand-200 dark:shadow-none">
-              <span className="text-3xl text-white font-bold">Q</span>
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Bem-vindo ao Quantum</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">Plataforma de ensino consciente.</p>
-          </div>
-          
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
-              <input 
-                type="email" 
-                defaultValue="aluno@quantum.edu"
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Senha</label>
-              <input 
-                type="password" 
-                defaultValue="password"
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
-              />
-            </div>
-          <div className="pt-2">
-            <Button type="submit" fullWidth size="lg">Entrar na Plataforma</Button>
-          </div>
-        </form>
-
-        </div>
-      </div>
-    );
+  if (!isAuthenticated || !user) {
+    return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return (
@@ -406,7 +386,7 @@ const App: React.FC = () => {
         onChangeView={setCurrentView} 
         onLogout={handleLogout}
         onSelectLesson={handleSelectLessonFromSidebar}
-        activeLesson={activeLessonCoords} // Passando estado ativo
+        activeLesson={activeLessonCoords}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         theme={theme}
@@ -436,7 +416,7 @@ const App: React.FC = () => {
             onViewCertificate={() => setCurrentView('certificate')}
             initialModuleIndex={activeLessonCoords?.mIndex || 0}
             initialLessonIndex={activeLessonCoords?.lIndex || 0}
-            onLessonChange={(m, l) => setActiveLessonCoords({mIndex: m, lIndex: l})} // Sincronização
+            onLessonChange={(m, l) => setActiveLessonCoords({mIndex: m, lIndex: l})}
           />
         )}
 
@@ -444,7 +424,7 @@ const App: React.FC = () => {
           <CertificatePreview 
             studentName={user.name}
             courseTitle={courseData.title}
-            config={courseData.certificateConfig} // Pass config
+            config={courseData.certificateConfig}
             onBack={() => setCurrentView('course')}
           />
         )}
@@ -467,7 +447,7 @@ const App: React.FC = () => {
               students={students}
               onUpdateCourse={handleUpdateCourse} 
               onUpdateStudent={handleUpdateStudent}
-              onAddStudent={handleAddStudent} // Passando a nova função
+              onAddStudent={handleAddStudent}
             />
           </div>
         )}
