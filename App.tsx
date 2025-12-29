@@ -276,16 +276,25 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    if (!supabase) return;
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      showError("Erro ao fazer logout: " + error.message);
-    } else {
-      showSuccess("Logout realizado com sucesso!");
-      setCurrentView('dashboard');
-      setIsMobileMenuOpen(false);
-      setUser(null); // Clear user state on logout
+    // 1. Clear local storage immediately
+    localStorage.removeItem('quantum_user_v1');
+
+    // 2. Reset local state immediately
+    setIsAuthenticated(false);
+    setUser(null);
+    setCurrentView('dashboard');
+    setIsMobileMenuOpen(false);
+
+    // 3. Sign out from Supabase (if client exists)
+    if (supabase) {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Erro ao fazer logout no Supabase:", error);
+        // Even if Supabase errors, we already cleared local state so user is "out"
+      }
     }
+
+    showSuccess("Logout realizado com sucesso!");
   };
 
   const handleCompleteLesson = (lessonId: string) => {
