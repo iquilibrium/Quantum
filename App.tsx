@@ -96,6 +96,7 @@ const App: React.FC = () => {
       console.log("Auth Event:", event, session?.user?.id);
       if (session) {
         setIsAuthenticated(true);
+        if (!supabase) return;
         // Fetch user profile from 'profiles' table
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -107,7 +108,7 @@ const App: React.FC = () => {
           console.error("Error fetching user profile:", profileError);
           showError("Erro ao carregar perfil do usuário.");
           // Fallback to a basic user if profile not found
-          const fallbackUser = {
+          const fallbackUser: User = {
             id: session.user.id,
             name: session.user.user_metadata.full_name || session.user.email || 'Usuário',
             email: session.user.email || '',
@@ -256,6 +257,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    if (!supabase) return;
     const { error } = await supabase.auth.signOut();
     if (error) {
       showError("Erro ao fazer logout: " + error.message);
