@@ -93,6 +93,7 @@ const App: React.FC = () => {
     }
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth Event:", event, session?.user?.id);
       if (session) {
         setIsAuthenticated(true);
         // Fetch user profile from 'profiles' table
@@ -106,7 +107,7 @@ const App: React.FC = () => {
           console.error("Error fetching user profile:", profileError);
           showError("Erro ao carregar perfil do usuário.");
           // Fallback to a basic user if profile not found
-          setUser({
+          const fallbackUser = {
             id: session.user.id,
             name: session.user.user_metadata.full_name || session.user.email || 'Usuário',
             email: session.user.email || '',
@@ -119,9 +120,11 @@ const App: React.FC = () => {
             badges: [],
             completedLessons: [],
             lastAccess: new Date().toLocaleDateString('pt-BR')
-          });
+          };
+          console.log("Setting Fallback User:", fallbackUser);
+          setUser(fallbackUser);
         } else if (profile) {
-          setUser({
+          const loadedUser = {
             id: profile.id,
             name: profile.name,
             email: profile.email,
@@ -134,9 +137,12 @@ const App: React.FC = () => {
             badges: profile.badges,
             completedLessons: [], // TODO: Fetch from user_progress table
             lastAccess: profile.last_access ? new Date(profile.last_access).toLocaleDateString('pt-BR') : 'N/A'
-          });
+          };
+          console.log("Setting Loaded User:", loadedUser);
+          setUser(loadedUser);
         }
       } else {
+        console.log("No session, resetting user.");
         setIsAuthenticated(false);
         setUser(null);
       }
