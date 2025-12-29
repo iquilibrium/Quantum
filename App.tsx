@@ -10,7 +10,7 @@ import { ViewState, User, Course, Module, Lesson, Material, Quiz, QuizOption } f
 import { MOCK_USER, MOCK_STUDENTS, COURSE_DATA } from './constants';
 import { Button } from './components/Button';
 import { supabase } from './src/integrations/supabase/client'; // Corrected path
-import { showSuccess, showError, showLoading, dismissToast } from './utils/toast';
+import { showSuccess, showError, showLoading, dismissToast } from './src/utils/toast'; // Corrected path
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
