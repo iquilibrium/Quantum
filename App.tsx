@@ -284,8 +284,71 @@ const App: React.FC = () => {
     }) : null);
   };
 
-  const handleUpdateUser = (data: Partial<User>) => {
-    setUser(prev => prev ? ({ ...prev, ...data }) : null);
+  const handleUpdateUser = async (data: Partial<User>) => {
+    if (!user || !supabase) {
+      showError("Erro: Usuário não autenticado ou Supabase não inicializado.");
+      return;
+    }
+
+    const toastId = showLoading("Salvando perfil...");
+    let newAvatarUrl = data.avatarUrl;
+
+    try {
+      // 1. Handle avatar upload if it's a new image (base64 string)
+      if (data.avatarUrl && data.avatarUrl.startsWith('data:image')) {
+        const fileExt = data.avatarUrl.substring(data.avatarUrl.indexOf('/') + 1, data.avatarUrl.indexOf(';'));
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, decodeBase64Image(data.avatarUrl), {
+            contentType: `image/${fileExt}`,
+            upsert: true, // Overwrite if exists
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+        
+        if (!publicUrlData || !publicUrlData.publicUrl) throw new Error('Não foi possível obter a URL pública do avatar.');
+        newAvatarUrl = publicUrlData.publicUrl;
+      }
+
+      // 2. Update user profile in 'profiles' table
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          name: data.name,
+          email: data.email, // Assuming email can also be updated, though usually handled by auth
+          avatar_url: newAvatarUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // 3. Update local state
+      setUser(prev => prev ? ({ ...prev, ...data, avatarUrl: newAvatarUrl || prev.avatarUrl }) : null);
+      showSuccess("Perfil atualizado com sucesso!");
+
+    } catch (error: any) {
+      console.error("Erro ao atualizar perfil:", error);
+      showError(`Erro ao atualizar perfil: ${error.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
+  };
+
+  // Helper function to decode base64 image for Supabase upload
+  const decodeBase64Image = (dataString: string) => {
+    const matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      throw new Error('Invalid base64 image string');
+    }
+    return Buffer.from(matches[2], 'base64');
   };
 
   const handleUpdateCourse = (updatedCourse: Course) => {
