@@ -12,7 +12,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
 
     /* Linting */
     "strict": true,
@@ -20,9 +19,15 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* Adicionado para resolver o erro 'Cannot find type definition file for 'node'' */
-    "types": ["node"] 
+    /* Paths */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+
+    /* Type definitions */
+    "types": ["vite/client"]
   },
-  "include": ["src", "types.ts", "constants.ts", "components", "index.tsx", "vite.config.ts"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
