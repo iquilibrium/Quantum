@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Course, Module, Lesson, QuizOption, User, CertificateConfig, Material } from '../types';
 import { Button } from './Button';
 import { Certificate } from './Certificate';
-import { supabase } from '../lib/supabaseClient'; // Import Client
+import { supabase } from '../src/integrations/supabase/client'; // Corrected path
 import { AddStudentModal } from './AddStudentModal'; // Importar o novo modal
 import { showSuccess, showError, showLoading, dismissToast } from '../src/utils/toast'; // Importar toasts
 
