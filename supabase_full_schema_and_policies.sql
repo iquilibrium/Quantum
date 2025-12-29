@@ -1,5 +1,5 @@
 -- Tabela de Perfis de Usuários
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT,
   name TEXT,
@@ -16,6 +16,7 @@ CREATE TABLE public.profiles (
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+-- Políticas para profiles (serão criadas ou atualizadas)
 CREATE POLICY "profiles_select_policy" ON public.profiles
 FOR SELECT TO authenticated USING (auth.uid() = id);
 
@@ -54,7 +55,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Tabela de Cursos
-CREATE TABLE public.courses (
+CREATE TABLE IF NOT EXISTS public.courses (
   id TEXT NOT NULL PRIMARY KEY,
   title TEXT NOT NULL,
   course_cover_url TEXT,
@@ -70,7 +71,7 @@ CREATE POLICY "Allow authenticated users to update courses" ON public.courses
 FOR UPDATE TO authenticated USING (true);
 
 -- Tabela de Módulos
-CREATE TABLE public.modules (
+CREATE TABLE IF NOT EXISTS public.modules (
   id TEXT NOT NULL PRIMARY KEY,
   course_id TEXT REFERENCES public.courses(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -86,7 +87,7 @@ CREATE POLICY "Módulos são públicos para leitura" ON public.modules
 FOR SELECT USING (true);
 
 -- Tabela de Aulas
-CREATE TABLE public.lessons (
+CREATE TABLE IF NOT EXISTS public.lessons (
   id TEXT NOT NULL PRIMARY KEY,
   module_id TEXT REFERENCES public.modules(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -104,7 +105,7 @@ CREATE POLICY "Aulas são públicas para leitura" ON public.lessons
 FOR SELECT USING (true);
 
 -- Tabela de Materiais
-CREATE TABLE public.materials (
+CREATE TABLE IF NOT EXISTS public.materials (
   id TEXT NOT NULL PRIMARY KEY,
   lesson_id TEXT REFERENCES public.lessons(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -118,7 +119,7 @@ CREATE POLICY "Materiais são públicos para leitura" ON public.materials
 FOR SELECT USING (true);
 
 -- Tabela de Quizzes
-CREATE TABLE public.quizzes (
+CREATE TABLE IF NOT EXISTS public.quizzes (
   id TEXT NOT NULL PRIMARY KEY,
   lesson_id TEXT REFERENCES public.lessons(id) ON DELETE CASCADE,
   question TEXT NOT NULL
@@ -130,7 +131,7 @@ CREATE POLICY "Quizzes são públicos para leitura" ON public.quizzes
 FOR SELECT USING (true);
 
 -- Tabela de Opções de Quiz
-CREATE TABLE public.quiz_options (
+CREATE TABLE IF NOT EXISTS public.quiz_options (
   id TEXT NOT NULL PRIMARY KEY,
   quiz_id TEXT REFERENCES public.quizzes(id) ON DELETE CASCADE,
   text TEXT NOT NULL,
@@ -143,7 +144,7 @@ CREATE POLICY "Opções são públicas para leitura" ON public.quiz_options
 FOR SELECT USING (true);
 
 -- Tabela de Progresso do Usuário
-CREATE TABLE public.user_progress (
+CREATE TABLE IF NOT EXISTS public.user_progress (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   lesson_id TEXT NOT NULL REFERENCES public.lessons(id) ON DELETE CASCADE,
   completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -155,10 +156,8 @@ ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Usuários gerenciam próprio progresso" ON public.user_progress
 FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
--- Tabela de Configurações de Certificado (se ainda não estiver em courses)
--- Se certificate_config já estiver em 'courses', esta tabela pode ser redundante.
--- Mantendo para garantir que a estrutura esteja completa, mas pode ser ajustado.
-CREATE TABLE public.certificate_configs (
+-- Tabela de Configurações de Certificado (redundante se já estiver em courses, mas mantida para completude)
+CREATE TABLE IF NOT EXISTS public.certificate_configs (
   course_id TEXT NOT NULL PRIMARY KEY REFERENCES public.courses(id) ON DELETE CASCADE,
   title TEXT,
   subtitle TEXT,
@@ -174,3 +173,25 @@ ALTER TABLE public.certificate_configs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Config Certificado pública" ON public.certificate_configs
 FOR SELECT USING (true);
+
+-- Inserir dados iniciais para o curso principal se ele não existir
+INSERT INTO public.courses (id, title, course_cover_url, certificate_config)
+VALUES (
+  'c_quantum_full',
+  'Mecânica Quântica, Vibração e as 7 Leis Herméticas',
+  'https://images.unsplash.com/photo-1518066000714-cdcd82ab5959?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  '{
+    "title": "Certificado",
+    "subtitle": "de conclusão",
+    "bodyText": "Este certificado é orgulhosamente concedido a",
+    "signerName": "Dr. Hermes Trismegisto",
+    "signerRole": "Diretor Acadêmico Quantum",
+    "institutionName": "Quantum",
+    "primaryColor": "#7c3aed",
+    "displaySeal": true
+  }'::jsonb
+)
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  course_cover_url = EXCLUDED.course_cover_url,
+  certificate_config = EXCLUDED.certificate_config;
