@@ -15,7 +15,7 @@ import { showSuccess, showError, showLoading, dismissToast } from './src/utils/t
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
-  
+
   const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error' | 'missing'>('checking');
   const [dbMessage, setDbMessage] = useState('');
 
@@ -32,8 +32,8 @@ const App: React.FC = () => {
     }
     return 'light';
   });
-  
-  const [activeLessonCoords, setActiveLessonCoords] = useState<{mIndex: number, lIndex: number} | null>(null);
+
+  const [activeLessonCoords, setActiveLessonCoords] = useState<{ mIndex: number, lIndex: number } | null>(null);
 
   // --- HELPER: Mapear dados do DB (snake_case) para Frontend (camelCase) ---
   const mapDatabaseToCourse = (dbCourse: any): Course => {
@@ -187,11 +187,11 @@ const App: React.FC = () => {
           .single();
 
         if (dbError) {
-           console.warn("Curso não encontrado no DB ou erro de query. Usando Mock.", dbError);
+          console.warn("Curso não encontrado no DB ou erro de query. Usando Mock.", dbError);
         } else if (dbData) {
-           console.log("Curso carregado do Supabase com sucesso!", dbData);
-           const mappedCourse = mapDatabaseToCourse(dbData);
-           setCourseData(mappedCourse);
+          console.log("Curso carregado do Supabase com sucesso!", dbData);
+          const mappedCourse = mapDatabaseToCourse(dbData);
+          setCourseData(mappedCourse);
         }
 
         const { data: dbStudents, error: studentsError } = await supabase
@@ -248,7 +248,7 @@ const App: React.FC = () => {
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
-  
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -265,15 +265,15 @@ const App: React.FC = () => {
     if (!user || user.completedLessons.includes(lessonId)) {
       return;
     }
-      
+
     const totalLessons = courseData.modules.reduce((acc, mod) => {
-        return acc + (mod.isActive ? mod.lessons.filter(l => l.isActive).length : 0);
+      return acc + (mod.isActive ? mod.lessons.filter(l => l.isActive).length : 0);
     }, 0);
 
     const newCompletedList = [...user.completedLessons, lessonId];
 
-    const newProgress = totalLessons > 0 
-      ? Math.round((newCompletedList.length / totalLessons) * 100) 
+    const newProgress = totalLessons > 0
+      ? Math.round((newCompletedList.length / totalLessons) * 100)
       : 0;
 
     setUser(prev => prev ? ({
@@ -312,7 +312,7 @@ const App: React.FC = () => {
         const { data: publicUrlData } = supabase.storage
           .from('avatars')
           .getPublicUrl(filePath);
-        
+
         if (!publicUrlData || !publicUrlData.publicUrl) throw new Error('Não foi possível obter a URL pública do avatar.');
         newAvatarUrl = publicUrlData.publicUrl;
       }
@@ -348,7 +348,12 @@ const App: React.FC = () => {
     if (!matches || matches.length !== 3) {
       throw new Error('Invalid base64 image string');
     }
-    return Buffer.from(matches[2], 'base64');
+    const byteCharacters = atob(matches[2]);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    return new Uint8Array(byteNumbers);
   };
 
   const handleUpdateCourse = (updatedCourse: Course) => {
@@ -415,7 +420,7 @@ const App: React.FC = () => {
   const handleSelectLessonFromSidebar = (mIndex: number, lIndex: number) => {
     setActiveLessonCoords({ mIndex, lIndex });
     setCurrentView('course');
-    setIsMobileMenuOpen(false); 
+    setIsMobileMenuOpen(false);
   };
 
   if (!isAuthenticated || !user) {
@@ -427,12 +432,12 @@ const App: React.FC = () => {
       {/* Mobile Header */}
       <div className="md:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between flex-shrink-0 z-30 shadow-sm">
         <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm">
-              Q
-            </div>
-            <span className="font-bold text-slate-900 dark:text-white">Quantum</span>
+          <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-sm">
+            Q
+          </div>
+          <span className="font-bold text-slate-900 dark:text-white">Quantum</span>
         </div>
-        <button 
+        <button
           onClick={() => setIsMobileMenuOpen(true)}
           className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
         >
@@ -442,11 +447,11 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      <Sidebar 
-        user={user} 
-        course={courseData} 
-        currentView={currentView} 
-        onChangeView={setCurrentView} 
+      <Sidebar
+        user={user}
+        course={courseData}
+        currentView={currentView}
+        onChangeView={setCurrentView}
         onLogout={handleLogout}
         onSelectLesson={handleSelectLessonFromSidebar}
         activeLesson={activeLessonCoords}
@@ -455,46 +460,46 @@ const App: React.FC = () => {
         theme={theme}
         toggleTheme={toggleTheme}
       />
-      
+
       <main className="flex-1 md:ml-72 transition-all duration-200 h-full overflow-hidden flex flex-col relative bg-slate-50 dark:bg-slate-900">
         {currentView === 'dashboard' && (
           <div className="flex-1 overflow-y-auto">
-             <Dashboard 
-                user={user} 
-                course={courseData} 
-                onResume={() => {
-                  setActiveLessonCoords({ mIndex: 0, lIndex: 0 }); 
-                  setCurrentView('course');
-                }}
-              />
+            <Dashboard
+              user={user}
+              course={courseData}
+              onResume={() => {
+                setActiveLessonCoords({ mIndex: 0, lIndex: 0 });
+                setCurrentView('course');
+              }}
+            />
           </div>
         )}
-        
+
         {currentView === 'course' && (
-          <CoursePlayer 
-            course={courseData} 
+          <CoursePlayer
+            course={courseData}
             completedLessons={user.completedLessons}
             onCompleteLesson={handleCompleteLesson}
             onBack={() => setCurrentView('dashboard')}
             onViewCertificate={() => setCurrentView('certificate')}
             initialModuleIndex={activeLessonCoords?.mIndex || 0}
             initialLessonIndex={activeLessonCoords?.lIndex || 0}
-            onLessonChange={(m, l) => setActiveLessonCoords({mIndex: m, lIndex: l})}
+            onLessonChange={(m, l) => setActiveLessonCoords({ mIndex: m, lIndex: l })}
           />
         )}
 
         {currentView === 'certificate' && (
-          <CertificatePreview 
+          <CertificatePreview
             studentName={user.name}
             courseTitle={courseData.title}
             config={courseData.certificateConfig}
             onBack={() => setCurrentView('course')}
           />
         )}
-        
+
         {currentView === 'profile' && (
           <div className="flex-1 overflow-y-auto">
-            <Profile 
+            <Profile
               user={user}
               course={courseData}
               onBack={() => setCurrentView('dashboard')}
@@ -505,10 +510,10 @@ const App: React.FC = () => {
 
         {currentView === 'admin' && (
           <div className="flex-1 overflow-y-auto">
-            <AdminPanel 
-              course={courseData} 
+            <AdminPanel
+              course={courseData}
               students={students}
-              onUpdateCourse={handleUpdateCourse} 
+              onUpdateCourse={handleUpdateCourse}
               onUpdateStudent={handleUpdateStudent}
               onAddStudent={handleAddStudent}
             />
