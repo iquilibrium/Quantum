@@ -16,6 +16,12 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+-- Remover políticas existentes antes de criá-las novamente
+DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_insert_policy" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_update_policy" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_delete_policy" ON public.profiles;
+
 -- Políticas para profiles (serão criadas ou atualizadas)
 CREATE POLICY "profiles_select_policy" ON public.profiles
 FOR SELECT TO authenticated USING (auth.uid() = id);
@@ -64,6 +70,10 @@ CREATE TABLE IF NOT EXISTS public.courses (
 
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 
+-- Remover políticas existentes antes de criá-las novamente
+DROP POLICY IF EXISTS "Conteúdo é público para leitura" ON public.courses;
+DROP POLICY IF EXISTS "Allow authenticated users to update courses" ON public.courses;
+
 CREATE POLICY "Conteúdo é público para leitura" ON public.courses
 FOR SELECT USING (true);
 
@@ -83,6 +93,9 @@ CREATE TABLE IF NOT EXISTS public.modules (
 
 ALTER TABLE public.modules ENABLE ROW LEVEL SECURITY;
 
+-- Remover políticas existentes antes de criá-las novamente
+DROP POLICY IF EXISTS "Módulos são públicos para leitura" ON public.modules;
+
 CREATE POLICY "Módulos são públicos para leitura" ON public.modules
 FOR SELECT USING (true);
 
@@ -101,6 +114,9 @@ CREATE TABLE IF NOT EXISTS public.lessons (
 
 ALTER TABLE public.lessons ENABLE ROW LEVEL SECURITY;
 
+-- Remover políticas existentes antes de criá-las novamente
+DROP POLICY IF EXISTS "Aulas são públicas para leitura" ON public.lessons;
+
 CREATE POLICY "Aulas são públicas para leitura" ON public.lessons
 FOR SELECT USING (true);
 
@@ -115,6 +131,9 @@ CREATE TABLE IF NOT EXISTS public.materials (
 
 ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
 
+-- Remover políticas existentes antes de criá-las novamente
+DROP POLICY IF EXISTS "Materiais são públicos para leitura" ON public.materials;
+
 CREATE POLICY "Materiais são públicos para leitura" ON public.materials
 FOR SELECT USING (true);
 
@@ -126,6 +145,9 @@ CREATE TABLE IF NOT EXISTS public.quizzes (
 );
 
 ALTER TABLE public.quizzes ENABLE ROW LEVEL SECURITY;
+
+-- Remover políticas existentes antes de criá-las novamente
+DROP POLICY IF EXISTS "Quizzes são públicos para leitura" ON public.quizzes;
 
 CREATE POLICY "Quizzes são públicos para leitura" ON public.quizzes
 FOR SELECT USING (true);
@@ -140,6 +162,9 @@ CREATE TABLE IF NOT EXISTS public.quiz_options (
 
 ALTER TABLE public.quiz_options ENABLE ROW LEVEL SECURITY;
 
+-- Remover políticas existentes antes de criá-las novamente
+DROP POLICY IF EXISTS "Opções são públicas para leitura" ON public.quiz_options;
+
 CREATE POLICY "Opções são públicas para leitura" ON public.quiz_options
 FOR SELECT USING (true);
 
@@ -152,6 +177,9 @@ CREATE TABLE IF NOT EXISTS public.user_progress (
 );
 
 ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
+
+-- Remover políticas existentes antes de criá-las novamente
+DROP POLICY IF EXISTS "Usuários gerenciam próprio progresso" ON public.user_progress;
 
 CREATE POLICY "Usuários gerenciam próprio progresso" ON public.user_progress
 FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
@@ -170,6 +198,9 @@ CREATE TABLE IF NOT EXISTS public.certificate_configs (
 );
 
 ALTER TABLE public.certificate_configs ENABLE ROW LEVEL SECURITY;
+
+-- Remover políticas existentes antes de criá-las novamente
+DROP POLICY IF EXISTS "Config Certificado pública" ON public.certificate_configs;
 
 CREATE POLICY "Config Certificado pública" ON public.certificate_configs
 FOR SELECT USING (true);
