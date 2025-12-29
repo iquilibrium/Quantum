@@ -14,6 +14,7 @@ import { showSuccess, showError, showLoading, dismissToast } from './src/utils/t
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Global loading state
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
 
   const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error' | 'missing'>('checking');
@@ -146,7 +147,11 @@ const App: React.FC = () => {
         console.log("No session, resetting user.");
         setIsAuthenticated(false);
         setUser(null);
+        // Only stop loading if we are sure there is no session. 
+        // If we are just starting, we might want to wait a bit or just stop.
+        // Usually, if no session, we show login.
       }
+      setIsLoading(false); // Stop loading after checks
     });
 
     return () => {
@@ -430,6 +435,17 @@ const App: React.FC = () => {
     setCurrentView('course');
     setIsMobileMenuOpen(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin"></div>
+          <p className="text-brand-700 dark:text-brand-300 font-medium animate-pulse">Carregando Quantum...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
