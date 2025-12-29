@@ -65,8 +65,17 @@ CREATE TABLE IF NOT EXISTS public.courses (
   id TEXT NOT NULL PRIMARY KEY,
   title TEXT NOT NULL,
   course_cover_url TEXT,
-  certificate_config JSONB
+  certificate_config JSONB -- Esta coluna já está na definição, mas pode não ter sido adicionada se a tabela já existia
 );
+
+-- Adicionar a coluna certificate_config se ela não existir (para tabelas já existentes)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'courses' AND column_name = 'certificate_config') THEN
+        ALTER TABLE public.courses ADD COLUMN certificate_config JSONB;
+    END IF;
+END
+$$;
 
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 
