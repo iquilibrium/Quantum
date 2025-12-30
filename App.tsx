@@ -148,15 +148,15 @@ const App: React.FC = () => {
           console.log("✅ Profile loaded from database:", profile.name);
           const loadedUser = {
             id: profile.id,
-            name: profile.name,
-            email: profile.email,
+            name: profile.name || session.user.email?.split('@')[0] || 'Usuário',
+            email: profile.email || session.user.email || '',
             avatarUrl: profile.avatar_url || 'https://i.pravatar.cc/150?img=68',
-            role: profile.role,
-            isActive: profile.is_active,
-            progress: profile.progress,
-            points: profile.points,
-            level: profile.level,
-            badges: profile.badges,
+            role: profile.role || 'student',
+            isActive: profile.is_active ?? true,
+            progress: profile.progress || 0,
+            points: profile.points || 0,
+            level: profile.level || 1,
+            badges: profile.badges || [],
             completedLessons: [], // TODO: Fetch from user_progress table
             lastAccess: profile.last_access ? new Date(profile.last_access).toLocaleDateString('pt-BR') : 'N/A'
           };
