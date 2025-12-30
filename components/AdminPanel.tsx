@@ -156,7 +156,46 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     onUpdateCourse({ ...course, modules: newModules });
     setDraggedModuleIdx(targetIndex);
   };
-  const handleDragEnd = () => { setDraggedModuleIdx(null); setDraggedLessonInfo(null); };
+  const handleDragEnd = async () => {
+    if (!supabase) { setDraggedModuleIdx(null); setDraggedLessonInfo(null); return; }
+
+    // Se houve mudança de ordem de módulos
+    if (draggedModuleIdx !== null) {
+      const toastId = showLoading('Sincronizando ordem dos módulos...');
+      try {
+        // Salva a ordem de todos os módulos
+        const promises = course.modules.map((m, idx) =>
+          supabase.from('modules').update({ order_index: idx }).eq('id', m.id)
+        );
+        await Promise.all(promises);
+        showSuccess('Ordem dos módulos sincronizada!');
+      } catch (err: any) {
+        showError('Erro ao sincronizar ordem dos módulos');
+      } finally {
+        dismissToast(toastId);
+      }
+    }
+
+    // Se houve mudança de ordem de aulas
+    if (draggedLessonInfo !== null) {
+      const toastId = showLoading('Sincronizando ordem das aulas...');
+      try {
+        const targetModule = course.modules[draggedLessonInfo.modIdx];
+        const promises = targetModule.lessons.map((l, idx) =>
+          supabase.from('lessons').update({ order_index: idx }).eq('id', l.id)
+        );
+        await Promise.all(promises);
+        showSuccess('Ordem das aulas sincronizada!');
+      } catch (err: any) {
+        showError('Erro ao sincronizar ordem das aulas');
+      } finally {
+        dismissToast(toastId);
+      }
+    }
+
+    setDraggedModuleIdx(null);
+    setDraggedLessonInfo(null);
+  };
   const handleLessonDragStart = (modIdx: number, lessIdx: number) => { setDraggedLessonInfo({ modIdx, lessIdx }); };
   const handleLessonDragEnter = (targetModIdx: number, targetLessIdx: number) => {
     if (!draggedLessonInfo || draggedLessonInfo.modIdx !== targetModIdx || draggedLessonInfo.lessIdx === targetLessIdx) return;
@@ -178,10 +217,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     setCertForm(updatedForm);
     onUpdateCourse({ ...course, certificateConfig: updatedForm });
   };
-  const handleSaveCertificate = () => {
-    onUpdateCourse({ ...course, certificateConfig: certForm });
-    setShowSaveSuccess(true);
-    setTimeout(() => setShowSaveSuccess(false), 3000);
+  const handleSaveCertificate = async () => {
+    if (!supabase) return;
+    const toastId = showLoading('Salvando configurações do certificado...');
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .update({ certificate_config: certForm })
+        .eq('id', course.id);
+
+      if (error) throw error;
+
+      onUpdateCourse({ ...course, certificateConfig: certForm });
+      showSuccess('Configurações do certificado salvas!');
+      setShowSaveSuccess(true);
+      setTimeout(() => setShowSaveSuccess(false), 3000);
+    } catch (err: any) {
+      showError(`Erro ao salvar certificado: ${err.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
   };
   const handleCourseSettingsChange = (field: keyof typeof courseSettingsForm, value: string) => {
     setCourseSettingsForm(prev => ({ ...prev, [field]: value }));
@@ -264,35 +319,99 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     }
   };
 
-  const toggleModuleStatus = (module: Module) => {
-    const newModules = course.modules.map(m => m.id === module.id ? { ...m, isActive: !m.isActive } : m);
-    onUpdateCourse({ ...course, modules: newModules });
+  const toggleModuleStatus = async (module: Module) => {
+    if (!supabase) return;
+    const toastId = showLoading(module.isActive ? 'Desativando módulo...' : 'Ativando módulo...');
+    try {
+      const { error } = await supabase
+        .from('modules')
+        .update({ is_active: !module.isActive })
+        .eq('id', module.id);
+
+      if (error) throw error;
+
+      const newModules = course.modules.map(m => m.id === module.id ? { ...m, isActive: !m.isActive } : m);
+      onUpdateCourse({ ...course, modules: newModules });
+      showSuccess(`Módulo ${!module.isActive ? 'ativado' : 'desativado'} com sucesso!`);
+    } catch (err: any) {
+      showError(`Erro ao atualizar status: ${err.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
   };
-  const toggleLessonStatus = (moduleId: string, lesson: Lesson) => {
-    const newModules = course.modules.map(m => {
-      if (m.id === moduleId) {
-        const newLessons = m.lessons.map(l => l.id === lesson.id ? { ...l, isActive: !l.isActive } : l);
-        return { ...m, lessons: newLessons };
-      }
-      return m;
-    });
-    onUpdateCourse({ ...course, modules: newModules });
+  const toggleLessonStatus = async (moduleId: string, lesson: Lesson) => {
+    if (!supabase) return;
+    const toastId = showLoading(lesson.isActive ? 'Desativando aula...' : 'Ativando aula...');
+    try {
+      const { error } = await supabase
+        .from('lessons')
+        .update({ is_active: !lesson.isActive })
+        .eq('id', lesson.id);
+
+      if (error) throw error;
+
+      const newModules = course.modules.map(m => {
+        if (m.id === moduleId) {
+          const newLessons = m.lessons.map(l => l.id === lesson.id ? { ...l, isActive: !l.isActive } : l);
+          return { ...m, lessons: newLessons };
+        }
+        return m;
+      });
+      onUpdateCourse({ ...course, modules: newModules });
+      showSuccess(`Aula ${!lesson.isActive ? 'ativada' : 'desativada'} com sucesso!`);
+    } catch (err: any) {
+      showError(`Erro ao atualizar status da aula: ${err.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
   };
-  const moveModuleUp = (index: number) => {
-    if (index === 0) return;
-    const newModules = [...course.modules];
-    const temp = newModules[index];
-    newModules[index] = newModules[index - 1];
-    newModules[index - 1] = temp;
-    onUpdateCourse({ ...course, modules: newModules });
+  const moveModuleUp = async (index: number) => {
+    if (index === 0 || !supabase) return;
+    const toastId = showLoading('Reordenando módulos...');
+    try {
+      const newModules = [...course.modules];
+      const mod1 = newModules[index];
+      const mod2 = newModules[index - 1];
+
+      // Update in DB (swap order_index)
+      // Assuming order_index matches current array index
+      const { error: err1 } = await supabase.from('modules').update({ order_index: index - 1 }).eq('id', mod1.id);
+      const { error: err2 } = await supabase.from('modules').update({ order_index: index }).eq('id', mod2.id);
+
+      if (err1 || err2) throw err1 || err2;
+
+      newModules[index] = mod2;
+      newModules[index - 1] = mod1;
+      onUpdateCourse({ ...course, modules: newModules });
+      showSuccess('Módulos reordenados!');
+    } catch (err: any) {
+      showError(`Erro ao reordenar: ${err.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
   };
-  const moveModuleDown = (index: number) => {
-    if (index === course.modules.length - 1) return;
-    const newModules = [...course.modules];
-    const temp = newModules[index];
-    newModules[index] = newModules[index + 1];
-    newModules[index + 1] = temp;
-    onUpdateCourse({ ...course, modules: newModules });
+  const moveModuleDown = async (index: number) => {
+    if (index === course.modules.length - 1 || !supabase) return;
+    const toastId = showLoading('Reordenando módulos...');
+    try {
+      const newModules = [...course.modules];
+      const mod1 = newModules[index];
+      const mod2 = newModules[index + 1];
+
+      const { error: err1 } = await supabase.from('modules').update({ order_index: index + 1 }).eq('id', mod1.id);
+      const { error: err2 } = await supabase.from('modules').update({ order_index: index }).eq('id', mod2.id);
+
+      if (err1 || err2) throw err1 || err2;
+
+      newModules[index] = mod2;
+      newModules[index + 1] = mod1;
+      onUpdateCourse({ ...course, modules: newModules });
+      showSuccess('Módulos reordenados!');
+    } catch (err: any) {
+      showError(`Erro ao reordenar: ${err.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
   };
   const openModuleModal = (module?: Module) => {
     if (module) {
@@ -304,22 +423,76 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     }
     setIsModuleModalOpen(true);
   };
-  const saveModule = () => {
-    if (!moduleForm.title) return alert("Título é obrigatório");
-    let newModules = [...course.modules];
-    if (editingModuleId) {
-      newModules = newModules.map(m => m.id === editingModuleId ? { ...m, ...moduleForm } as Module : m);
-    } else {
-      const newModule: Module = { id: `m_${Date.now()}`, title: moduleForm.title || '', description: moduleForm.description || '', isLocked: !!moduleForm.isLocked, isActive: true, lessons: [] };
-      newModules.push(newModule);
-    }
-    onUpdateCourse({ ...course, modules: newModules });
-    setIsModuleModalOpen(false);
-  };
-  const deleteModule = (moduleId: string) => {
-    if (window.confirm("Tem certeza? Todas as aulas deste módulo serão apagadas.")) {
-      const newModules = course.modules.filter(m => m.id !== moduleId);
+  const saveModule = async () => {
+    if (!moduleForm.title || !supabase) return alert("Título é obrigatório");
+    const toastId = showLoading('Salvando módulo...');
+    try {
+      const isNew = !editingModuleId;
+      const moduleId = editingModuleId || `m_${Date.now()}`;
+
+      const moduleData = {
+        id: moduleId,
+        course_id: course.id,
+        title: moduleForm.title,
+        description: moduleForm.description || '',
+        is_locked: !!moduleForm.isLocked,
+        is_active: moduleForm.isActive ?? true,
+        order_index: isNew ? course.modules.length : (course.modules.find(m => m.id === editingModuleId)?.id ? course.modules.findIndex(m => m.id === editingModuleId) : course.modules.length)
+      };
+
+      const { error } = await supabase
+        .from('modules')
+        .upsert(moduleData);
+
+      if (error) throw error;
+
+      let newModules = [...course.modules];
+      if (editingModuleId) {
+        newModules = newModules.map(m => m.id === editingModuleId ? { ...m, ...moduleForm } as Module : m);
+      } else {
+        const newModule: Module = {
+          id: moduleId,
+          title: moduleForm.title || '',
+          description: moduleForm.description || '',
+          isLocked: !!moduleForm.isLocked,
+          isActive: true,
+          lessons: []
+        };
+        newModules.push(newModule);
+      }
       onUpdateCourse({ ...course, modules: newModules });
+      setIsModuleModalOpen(false);
+      showSuccess(`Módulo ${isNew ? 'criado' : 'atualizado'} com sucesso!`);
+    } catch (err: any) {
+      showError(`Erro ao salvar módulo: ${err.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
+  };
+  const deleteModule = async (moduleId: string) => {
+    if (!supabase) return;
+    if (window.confirm("Tem certeza? Todas as aulas deste módulo serão apagadas do banco de dados.")) {
+      const toastId = showLoading('Excluindo módulo...');
+      try {
+        // As foreign keys devem estar configuradas com ON DELETE CASCADE no DB
+        // Mas para garantir, podemos limpar manualmente se necessário.
+        // Pelo esquema anterior, as aulas dependem de módulos.
+
+        const { error } = await supabase
+          .from('modules')
+          .delete()
+          .eq('id', moduleId);
+
+        if (error) throw error;
+
+        const newModules = course.modules.filter(m => m.id !== moduleId);
+        onUpdateCourse({ ...course, modules: newModules });
+        showSuccess('Módulo excluído com sucesso!');
+      } catch (err: any) {
+        showError(`Erro ao excluir módulo: ${err.message}`);
+      } finally {
+        dismissToast(toastId);
+      }
     }
   };
   const openLessonModal = (moduleId: string, lesson?: Lesson) => {
@@ -335,28 +508,114 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     }
     setIsLessonModalOpen(true);
   };
-  const saveLesson = () => {
-    if (!lessonForm.title || !activeModuleForLesson) return alert("Título e Módulo são obrigatórios");
-    const newModules = [...course.modules];
-    const moduleIndex = newModules.findIndex(m => m.id === activeModuleForLesson);
-    if (moduleIndex === -1) return;
-    const lessonToSave = { ...lessonForm, materials: lessonForm.materials || [] } as Lesson;
-    if (editingLessonId) {
-      const lessons = newModules[moduleIndex].lessons.map(l => l.id === editingLessonId ? lessonToSave : l);
-      newModules[moduleIndex] = { ...newModules[moduleIndex], lessons };
-    } else {
-      const newLesson: Lesson = { ...lessonToSave, id: `l_${Date.now()}` };
-      newModules[moduleIndex].lessons.push(newLesson);
-    }
-    onUpdateCourse({ ...course, modules: newModules });
-    setIsLessonModalOpen(false);
-  };
-  const deleteLesson = (moduleId: string, lessonId: string) => {
-    if (window.confirm("Apagar esta aula?")) {
+  const saveLesson = async () => {
+    if (!lessonForm.title || !activeModuleForLesson || !supabase) return alert("Título e Módulo são obrigatórios");
+    const toastId = showLoading('Salvando aula e conteúdos...');
+    try {
+      const isNew = !editingLessonId;
+      const lessonId = editingLessonId || `l_${Date.now()}`;
+
+      const moduleIdx = course.modules.findIndex(m => m.id === activeModuleForLesson);
+      const orderIndex = isNew
+        ? (course.modules[moduleIdx]?.lessons.length || 0)
+        : (course.modules[moduleIdx]?.lessons.findIndex(l => l.id === editingLessonId) ?? 0);
+
+      // 1. Save Lesson
+      const lessonData = {
+        id: lessonId,
+        module_id: activeModuleForLesson,
+        title: lessonForm.title,
+        description: lessonForm.description || '',
+        video_id: lessonForm.videoId || '',
+        duration: lessonForm.duration || '',
+        content: lessonForm.content || '',
+        is_active: lessonForm.isActive ?? true,
+        order_index: orderIndex
+      };
+
+      const { error: lessonError } = await supabase.from('lessons').upsert(lessonData);
+      if (lessonError) throw lessonError;
+
+      // 2. Save Materials
+      // Delete old materials and insert new ones to keep it simple
+      await supabase.from('materials').delete().eq('lesson_id', lessonId);
+      if (lessonForm.materials && lessonForm.materials.length > 0) {
+        const materialsData = lessonForm.materials.map(m => ({
+          id: m.id || `mat_${Math.random().toString(36).substr(2, 9)}`,
+          lesson_id: lessonId,
+          title: m.title,
+          url: m.url,
+          type: m.type
+        }));
+        const { error: matError } = await supabase.from('materials').insert(materialsData);
+        if (matError) throw matError;
+      }
+
+      // 3. Save Quiz
+      if (lessonForm.quiz) {
+        const quizId = lessonForm.quiz.id || `q_${Date.now()}`;
+        const { error: quizError } = await supabase.from('quizzes').upsert({
+          id: quizId,
+          lesson_id: lessonId,
+          question: lessonForm.quiz.question || ''
+        });
+        if (quizError) throw quizError;
+
+        // 4. Save Quiz Options
+        await supabase.from('quiz_options').delete().eq('quiz_id', quizId);
+        if (lessonForm.quiz.options && lessonForm.quiz.options.length > 0) {
+          const optionsData = lessonForm.quiz.options.map((opt, idx) => ({
+            id: opt.id || `opt_${quizId}_${idx}`,
+            quiz_id: quizId,
+            text: opt.text,
+            is_correct: opt.isCorrect
+          }));
+          const { error: optError } = await supabase.from('quiz_options').insert(optionsData);
+          if (optError) throw optError;
+        }
+      }
+
+      // Update State
       const newModules = [...course.modules];
-      const modIdx = newModules.findIndex(m => m.id === moduleId);
-      newModules[modIdx].lessons = newModules[modIdx].lessons.filter(l => l.id !== lessonId);
+      const lessonToSave = { ...lessonForm, id: lessonId, materials: lessonForm.materials || [] } as Lesson;
+      if (editingLessonId) {
+        const lessons = newModules[moduleIdx].lessons.map(l => l.id === editingLessonId ? lessonToSave : l);
+        newModules[moduleIdx] = { ...newModules[moduleIdx], lessons };
+      } else {
+        newModules[moduleIdx].lessons.push(lessonToSave);
+      }
+
       onUpdateCourse({ ...course, modules: newModules });
+      setIsLessonModalOpen(false);
+      showSuccess(`Aula ${isNew ? 'criada' : 'atualizada'} com sucesso!`);
+    } catch (err: any) {
+      showError(`Erro ao salvar aula: ${err.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
+  };
+  const deleteLesson = async (moduleId: string, lessonId: string) => {
+    if (!supabase) return;
+    if (window.confirm("Apagar esta aula do banco de dados?")) {
+      const toastId = showLoading('Excluindo aula...');
+      try {
+        const { error } = await supabase
+          .from('lessons')
+          .delete()
+          .eq('id', lessonId);
+
+        if (error) throw error;
+
+        const newModules = [...course.modules];
+        const modIdx = newModules.findIndex(m => m.id === moduleId);
+        newModules[modIdx].lessons = newModules[modIdx].lessons.filter(l => l.id !== lessonId);
+        onUpdateCourse({ ...course, modules: newModules });
+        showSuccess('Aula excluída com sucesso!');
+      } catch (err: any) {
+        showError(`Erro ao excluir aula: ${err.message}`);
+      } finally {
+        dismissToast(toastId);
+      }
     }
   };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -408,8 +667,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     if (!lessonForm.quiz) return;
     setLessonForm({ ...lessonForm, quiz: { ...lessonForm.quiz, options: lessonForm.quiz.options.filter((_, i) => i !== idx) } });
   };
-  const toggleStudentActive = (student: User) => {
-    onUpdateStudent({ ...student, isActive: !student.isActive });
+  const toggleStudentActive = async (student: User) => {
+    if (!supabase) return;
+    const toastId = showLoading(student.isActive ? 'Desativando aluno...' : 'Ativando aluno...');
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active: !student.isActive })
+        .eq('id', student.id);
+
+      if (error) throw error;
+
+      onUpdateStudent({ ...student, isActive: !student.isActive });
+      showSuccess(`Aluno ${!student.isActive ? 'ativado' : 'desativado'} com sucesso!`);
+    } catch (err: any) {
+      showError(`Erro ao atualizar status do aluno: ${err.message}`);
+    } finally {
+      dismissToast(toastId);
+    }
   };
 
   const handleAddStudentSubmit = async (studentData: { name: string; email: string; password: string; avatarUrl?: string }) => {
