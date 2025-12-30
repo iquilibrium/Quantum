@@ -1,0 +1,358 @@
+-- =====================================================
+-- Script para Popular Banco de Dados com Curso Quantum
+-- =====================================================
+-- Este script insere todo o conteúdo do curso mock no banco de dados
+-- Execute no SQL Editor do Supabase
+-- =====================================================
+
+-- Limpar dados existentes (em ordem reversa devido às foreign keys)
+DELETE FROM quiz_options WHERE quiz_id IN (SELECT id FROM quizzes WHERE lesson_id IN (SELECT id FROM lessons WHERE module_id IN (SELECT id FROM modules WHERE course_id = 'c_quantum_full')));
+DELETE FROM quizzes WHERE lesson_id IN (SELECT id FROM lessons WHERE module_id IN (SELECT id FROM modules WHERE course_id = 'c_quantum_full'));
+DELETE FROM materials WHERE lesson_id IN (SELECT id FROM lessons WHERE module_id IN (SELECT id FROM modules WHERE course_id = 'c_quantum_full'));
+DELETE FROM lessons WHERE module_id IN (SELECT id FROM modules WHERE course_id = 'c_quantum_full');
+DELETE FROM modules WHERE course_id = 'c_quantum_full';
+DELETE FROM courses WHERE id = 'c_quantum_full';
+
+-- =====================================================
+-- INSERIR CURSO
+-- =====================================================
+INSERT INTO courses (id, title, course_cover_url, certificate_config) VALUES (
+  'c_quantum_full',
+  'Mecânica Quântica, Vibração e as 7 Leis Herméticas',
+  'https://images.unsplash.com/photo-1518066000714-cdcd82ab5959?q=80&w=2070&auto=format&fit=crop',
+  '{"title": "Certificado", "subtitle": "de conclusão", "bodyText": "Este certificado é orgulhosamente concedido a", "signerName": "Dr. Hermes Trismegisto", "signerRole": "Diretor Acadêmico Quantum", "displaySeal": true, "primaryColor": "#7c3aed", "institutionName": "Quantum"}'::jsonb
+);
+
+-- =====================================================
+-- MÓDULO 1: Fundamentos da Realidade
+-- =====================================================
+INSERT INTO modules (id, course_id, title, description, is_locked, is_active, order_index) VALUES
+('m_1', 'c_quantum_full', 'Módulo 1: Fundamentos da Realidade', 'Compreenda como a percepção e o observador moldam a experiência da realidade.', false, true, 0);
+
+-- Aulas do Módulo 1
+INSERT INTO lessons (id, module_id, title, description, video_id, duration, content, is_active, order_index) VALUES
+('l_1_1', 'm_1', 'O Que Chamamos de Realidade?', 'A realidade não é apenas o que existe fora, mas como interpretamos.', 'z1D05k8l-fM', '10 min', 
+'Quando falamos em realidade, geralmente pensamos no mundo físico: objetos, pessoas e acontecimentos. Porém, a realidade não é apenas aquilo que existe fora de nós, mas também a forma como interpretamos o que existe.
+
+Cada pessoa percebe o mundo através de filtros como crenças, emoções, experiências passadas e expectativas. Por isso, duas pessoas podem viver a mesma situação e ter experiências completamente diferentes.
+
+A ciência moderna mostra que aquilo que observamos não é apenas o objeto em si, mas o resultado da interação entre o observador e o observado. Compreender a realidade começa por compreender como percebemos.', true, 0),
+
+('l_1_2', 'm_1', 'Limites do Pensamento Clássico', 'Por que o modelo de universo como "máquina previsível" falhou.', 'A9tKnc_1', '12 min',
+'Durante séculos, a ciência acreditou que o universo funcionava como uma máquina previsível. Se fosse possível conhecer todas as variáveis, seria possível prever qualquer evento.
+
+Esse modelo funcionou muito bem para fenômenos grandes, mas começou a falhar ao estudar o mundo microscópico.
+
+No nível dos átomos e partículas, os fenômenos não seguem regras rígidas e totalmente previsíveis. Isso mostra que o pensamento clássico é útil, mas limitado.', true, 1),
+
+('l_1_3', 'm_1', 'Observador, Percepção e Experiência', 'Como a interação entre observador e observado constrói a realidade.', 'obs_v3', '15 min',
+'Na ciência moderna, o observador não é apenas alguém que assiste aos fenômenos. A forma como observamos e medimos influencia o resultado.
+
+Isso não significa que a mente cria tudo do nada, mas que a observação interfere na experiência.
+
+No cotidiano, isso é percebido quando nossas expectativas e emoções influenciam a forma como interpretamos os acontecimentos. A realidade é construída pela interação entre o que acontece e como interpretamos.', true, 2),
+
+('l_1_4', 'm_1', 'Preparando a Mente para o Quantum', 'A atitude mental necessária para compreender o mundo quântico.', 'prep_v4', '10 min',
+'Compreender conceitos quânticos exige flexibilidade mental. Estamos acostumados a pensar de forma linear e rígida, mas o mundo quântico funciona de maneira diferente.
+
+O curso Quantum não pede crença cega, mas observação, reflexão e abertura para novos modelos de compreensão da realidade. Assim como aprender uma nova habilidade, compreender o Quantum exige prática mental.', true, 3),
+
+('l_1_inactive_ex', 'm_1', 'Aula Inativa Exemplo', 'Esta é uma aula de exemplo inativa para demonstração.', 'placeholder', '5 min',
+'Conteúdo temporário para aula inativa. Apenas administradores deveriam ver isso em modo de edição.', false, 4);
+
+-- Materiais do Módulo 1
+INSERT INTO materials (id, lesson_id, title, url, type) VALUES
+('m_1_1_pdf', 'l_1_1', 'Guia de Percepção (PDF)', '#', 'pdf'),
+('m_1_1_art', 'l_1_1', 'Artigo: Neurociência e Realidade', '#', 'link'),
+('m_1_2_doc', 'l_1_2', 'Resumo: Newton vs Quantum', '#', 'doc'),
+('m_1_4_vid', 'l_1_4', 'Exercício de Flexibilidade Mental', '#', 'video');
+
+-- Quizzes do Módulo 1
+INSERT INTO quizzes (id, lesson_id, question) VALUES
+('q_1_1', 'l_1_1', 'O que mais influencia a forma como percebemos a realidade?'),
+('q_1_2', 'l_1_2', 'O pensamento clássico vê o universo como:'),
+('q_1_3', 'l_1_3', 'Na visão moderna, qual é o papel do observador?'),
+('q_1_4', 'l_1_4', 'Qual atitude é mais adequada para aprender conceitos quânticos?'),
+('q_1_inactive', 'l_1_inactive_ex', 'Esta aula é visível para estudantes?');
+
+-- Opções dos Quizzes do Módulo 1
+INSERT INTO quiz_options (id, quiz_id, text, is_correct) VALUES
+('opt_1_1_1', 'q_1_1', 'Apenas os fatos externos', false),
+('opt_1_1_2', 'q_1_1', 'A percepção, crenças e emoções', true),
+('opt_1_1_3', 'q_1_1', 'O acaso', false),
+('opt_1_1_4', 'q_1_1', 'A sorte', false),
+
+('opt_1_2_1', 'q_1_2', 'Caótico e desordenado', false),
+('opt_1_2_2', 'q_1_2', 'Uma máquina previsível', true),
+('opt_1_2_3', 'q_1_2', 'Totalmente imprevisível', false),
+('opt_1_2_4', 'q_1_2', 'Uma ilusão mental', false),
+
+('opt_1_3_1', 'q_1_3', 'É irrelevante para o experimento', false),
+('opt_1_3_2', 'q_1_3', 'Apenas assiste passivamente', false),
+('opt_1_3_3', 'q_1_3', 'Pode influenciar a experiência', true),
+('opt_1_3_4', 'q_1_3', 'Controla todas as variáveis', false),
+
+('opt_1_4_1', 'q_1_4', 'Rigidez intelectual', false),
+('opt_1_4_2', 'q_1_4', 'Ceticismo absoluto', false),
+('opt_1_4_3', 'q_1_4', 'Abertura e observação', true),
+('opt_1_4_4', 'q_1_4', 'Rejeição imediata', false),
+
+('opt_i_1', 'q_1_inactive', 'Sim', false),
+('opt_i_2', 'q_1_inactive', 'Não', true);
+
+-- =====================================================
+-- MÓDULO 2: Introdução à Mecânica Quântica
+-- =====================================================
+INSERT INTO modules (id, course_id, title, description, is_locked, is_active, order_index) VALUES
+('m_2', 'c_quantum_full', 'Módulo 2: Introdução à Mecânica Quântica', 'Conceitos fundamentais: dualidade, incerteza e probabilidade.', false, true, 1);
+
+-- Aulas do Módulo 2
+INSERT INTO lessons (id, module_id, title, description, video_id, duration, content, is_active, order_index) VALUES
+('l_2_1', 'm_2', 'O Que é Mecânica Quântica?', 'O estudo da matéria e energia em escalas atômicas.', 'mq_intro', '18 min',
+'A Mecânica Quântica é o ramo da física que estuda o comportamento da matéria e da energia em escalas muito pequenas, como átomos e partículas subatômicas.
+
+Ela surgiu quando a física clássica não conseguiu explicar certos fenômenos observados na natureza. É uma das teorias mais testadas da ciência e introduz a ideia de probabilidade como parte fundamental da realidade.', true, 0),
+
+('l_2_2', 'm_2', 'Luz: Onda ou Partícula?', 'A dualidade onda-partícula e o contexto da observação.', 'light_dual', '20 min',
+'A luz pode se comportar como onda ou como partícula, dependendo da forma como é observada. Esse fenômeno é chamado de dualidade onda-partícula.
+
+Isso demonstra que o comportamento da luz depende do contexto da observação. Não existe uma definição fixa e imutável isolada do experimento.', true, 1),
+
+('l_2_3', 'm_2', 'O Experimento da Dupla Fenda', 'Como o ato de medir interfere no sistema observado.', 'double_slit', '25 min',
+'O experimento da dupla fenda mostrou que partículas se comportam como ondas (criando padrões de interferência) quando não são observadas diretamente, e como partículas (sólidas e localizadas) quando são observadas.
+
+Isso evidencia que o ato de medir interfere no sistema observado, alterando seu comportamento fundamental.', true, 2),
+
+('l_2_4', 'm_2', 'Probabilidade e Incerteza', 'Os limites fundamentais de precisão da natureza.', 'uncert_principle', '15 min',
+'Na Mecânica Quântica, não é possível prever resultados exatos, apenas probabilidades.
+
+O princípio da incerteza mostra que a natureza possui limites fundamentais de precisão. Isso não é causado por falhas tecnológicas de medição, mas pela própria estrutura da realidade, que é probabilística em sua base.', true, 3),
+
+('l_2_5', 'm_2', 'O Que a Mecânica Quântica NÃO Diz', 'Desmistificando sensacionalismos e interpretações errôneas.', 'mq_myths', '12 min',
+'A Mecânica Quântica não afirma que "pensamentos criam tudo instantaneamente" ou que a realidade é uma "ilusão total".
+
+Ela mostra que a realidade é mais complexa do que o modelo clássico e que o observador influencia o sistema. O foco do curso é a clareza e profundidade, evitando o sensacionalismo mágico que muitas vezes distorce a ciência.', true, 4);
+
+-- Materiais do Módulo 2
+INSERT INTO materials (id, lesson_id, title, url, type) VALUES
+('m_2_3_sim', 'l_2_3', 'Simulador da Dupla Fenda', '#', 'link'),
+('m_2_3_img', 'l_2_3', 'Diagrama de Interferência', '#', 'image');
+
+-- Quizzes do Módulo 2
+INSERT INTO quizzes (id, lesson_id, question) VALUES
+('q_2_1', 'l_2_1', 'Por que a Mecânica Quântica surgiu?'),
+('q_2_2', 'l_2_2', 'O comportamento da luz (onda ou partícula) depende de quê?'),
+('q_2_3', 'l_2_3', 'Sem observação direta no experimento, a partícula se comporta como:'),
+('q_2_4', 'l_2_4', 'Os resultados na mecânica quântica são:'),
+('q_2_5', 'l_2_5', 'A Mecânica Quântica afirma que pensamentos criam a matéria instantaneamente?');
+
+-- Opções dos Quizzes do Módulo 2
+INSERT INTO quiz_options (id, quiz_id, text, is_correct) VALUES
+('opt_2_1_1', 'q_2_1', 'Curiosidade filosófica apenas', false),
+('opt_2_1_2', 'q_2_1', 'Falha da física clássica em explicar micro-fenômenos', true),
+('opt_2_1_3', 'q_2_1', 'Influência religiosa', false),
+
+('opt_2_2_1', 'q_2_2', 'Do acaso', false),
+('opt_2_2_2', 'q_2_2', 'Do contexto do experimento/observação', true),
+('opt_2_2_3', 'q_2_2', 'Da temperatura do ambiente', false),
+
+('opt_2_3_1', 'q_2_3', 'Onda', true),
+('opt_2_3_2', 'q_2_3', 'Objeto sólido', false),
+('opt_2_3_3', 'q_2_3', 'Matéria clássica', false),
+
+('opt_2_4_1', 'q_2_4', 'Exatos e Determinísticos', false),
+('opt_2_4_2', 'q_2_4', 'Aleatórios sem padrão', false),
+('opt_2_4_3', 'q_2_4', 'Probabilísticos', true),
+
+('opt_2_5_1', 'q_2_5', 'Sim, comprova a magia', false),
+('opt_2_5_2', 'q_2_5', 'Não, essa é uma interpretação incorreta', true),
+('opt_2_5_3', 'q_2_5', 'Depende do dia', false);
+
+-- =====================================================
+-- MÓDULO 3: Vibração e Frequência
+-- =====================================================
+INSERT INTO modules (id, course_id, title, description, is_locked, is_active, order_index) VALUES
+('m_3', 'c_quantum_full', 'Módulo 3: Vibração e Frequência', 'O movimento fundamental do universo e a ressonância.', false, true, 2);
+
+-- Aulas do Módulo 3
+INSERT INTO lessons (id, module_id, title, description, video_id, duration, content, is_active, order_index) VALUES
+('l_3_1', 'm_3', 'Tudo Vibra', 'A vibração como propriedade fundamental da matéria.', 'vib_fund', '15 min',
+'A ciência moderna mostra que tudo no universo está em movimento. Esse movimento gera vibração. Mesmo aquilo que parece sólido e estático a olho nu, como uma rocha ou uma mesa, está vibrando freneticamente em níveis microscópicos (atômicos e subatômicos).
+
+A vibração é uma propriedade fundamental da matéria e da energia.', true, 0),
+
+('l_3_2', 'm_3', 'Frequência e Ressonância', 'O alinhamento de vibrações e seus efeitos.', 'freq_res', '20 min',
+'Frequência é a velocidade da vibração. Quando duas vibrações se alinham ou são compatíveis, ocorre o fenômeno da **ressonância**.
+
+A ressonância explica por que certos ambientes, músicas, ideias ou pessoas nos afetam mais do que outros. Estamos "sintonizando" com aquela frequência específica, amplificando a troca de informação e energia.', true, 1),
+
+('l_3_3', 'm_3', 'Escalas de Vibração', 'Como as emoções e pensamentos ocupam diferentes graus de vibração.', 'scale_vib', '18 min',
+'Entender que tudo vibra é o primeiro passo. O segundo é compreender que existem escalas de vibração.
+
+No espectro das emoções humanas, o medo, a culpa e a vergonha vibram em frequências baixas e densas. A alegria, o amor e a gratidão vibram em frequências altas e sutis.
+
+Mudar sua realidade não é apenas mudar ações físicas, mas alterar o estado vibracional de onde essas ações partem.', true, 2);
+
+-- Quizzes do Módulo 3
+INSERT INTO quizzes (id, lesson_id, question) VALUES
+('q_3_1', 'l_3_1', 'Segundo a ciência, o que acontece com toda matéria no universo?'),
+('q_3_2', 'l_3_2', 'O que é Ressonância?'),
+('q_3_3', 'l_3_3', 'Qual é a diferença entre medo e alegria em termos físicos?');
+
+-- Opções dos Quizzes do Módulo 3
+INSERT INTO quiz_options (id, quiz_id, text, is_correct) VALUES
+('opt_3_1_1', 'q_3_1', 'Está parada em nível atômico', false),
+('opt_3_1_2', 'q_3_1', 'Vibra constantemente', true),
+('opt_3_1_3', 'q_3_1', 'É sólida e imutável', false),
+
+('opt_3_2_1', 'q_3_2', 'Quando vibrações se anulam', false),
+('opt_3_2_2', 'q_3_2', 'Quando vibrações se alinham', true),
+('opt_3_2_3', 'q_3_2', 'A ausência de movimento', false),
+
+('opt_3_3_1', 'q_3_3', 'São apenas palavras', false),
+('opt_3_3_2', 'q_3_3', 'Diferentes taxas de vibração/frequência', true),
+('opt_3_3_3', 'q_3_3', 'O medo é sólido, a alegria é gasosa', false);
+
+-- =====================================================
+-- MÓDULO 4: As 7 Leis Herméticas
+-- =====================================================
+INSERT INTO modules (id, course_id, title, description, is_locked, is_active, order_index) VALUES
+('m_4', 'c_quantum_full', 'Módulo 4: As 7 Leis Herméticas', 'Princípios universais do Caibalion aplicados à realidade.', false, true, 3);
+
+-- Aulas do Módulo 4
+INSERT INTO lessons (id, module_id, title, description, video_id, duration, content, is_active, order_index) VALUES
+('l_4_1', 'm_4', 'Lei do Mentalismo', '"O Todo é Mente; o Universo é Mental."', 'law_mentalism', '25 min',
+'A primeira Lei Hermética afirma que tudo começa na mente. Isso não significa que tudo é apenas imaginação humana, mas que a Consciência (O Todo) é o princípio organizador e gerador da experiência e da matéria.
+
+O universo, em sua essência, é uma criação mental do Todo.', true, 0),
+
+('l_4_2', 'm_4', 'Lei da Correspondência', '"O que está em cima é como o que está embaixo."', 'law_corresp', '20 min',
+'A Lei da Correspondência afirma que padrões se repetem em diferentes níveis da realidade (físico, mental e espiritual).
+
+Ao estudar o átomo (microcosmo), podemos entender o sistema solar (macrocosmo). Ao entender nossas emoções internas, podemos entender nossos resultados externos. Há uma harmonia e correlação entre os planos de existência.', true, 1),
+
+('l_4_3', 'm_4', 'Lei da Vibração', '"Nada está parado; tudo se move; tudo vibra."', 'law_vib', '15 min',
+'Este princípio hermético confirma o que a ciência moderna descobriu milênios depois: nada no universo está em repouso absoluto. A diferença entre as diversas manifestações de Matéria, Energia, Mente e Espírito resulta apenas de taxas variáveis de vibração.
+
+Quanto mais alta a vibração, mais elevada a posição na escala.', true, 2),
+
+('l_4_4', 'm_4', 'Lei da Polaridade', '"Tudo é Duplo; tudo tem polos; tudo tem o seu oposto."', 'law_pol', '18 min',
+'A Lei da Polaridade ensina que os opostos são apenas extremos da mesma coisa, variando apenas em grau. Quente e frio são a mesma coisa (temperatura), apenas em graus diferentes. Amor e ódio são graus da mesma emoção.
+
+A arte da polarização mental permite transmutar um estado mental em seu oposto, alterando sua vibração.', true, 3),
+
+('l_4_5', 'm_4', 'Lei do Ritmo', '"Tudo tem fluxo e refluxo; tudo tem suas marés."', 'law_rhythm', '15 min',
+'Tudo no universo opera em ciclos. O movimento pendular se manifesta em tudo: ascensão e queda de impérios, ciclos econômicos, marés, e nossos estados emocionais.
+
+A medida do movimento à direita é a medida do movimento à esquerda. O sábio aprende a "neutralizar" o ritmo, elevando-se acima da oscilação para não ser arrastado pelo pêndulo emocional.', true, 4),
+
+('l_4_6', 'm_4', 'Lei de Causa e Efeito', '"Toda Causa tem seu Efeito; todo Efeito tem sua Causa."', 'law_cause', '22 min',
+'O acaso é apenas um nome dado a uma lei não reconhecida. Nada escapa à Lei. Tudo o que acontece em sua vida é um efeito de uma causa anterior (consciente ou inconsciente).
+
+Para se tornar mestre da própria vida, deve-se deixar de ser um "efeito" das circunstâncias e tornar-se uma "causa" consciente.', true, 5),
+
+('l_4_7', 'm_4', 'Lei do Gênero', '"O Gênero está em tudo; tudo tem o seu princípio masculino e feminino."', 'law_gender', '15 min',
+'O Gênero se manifesta em todos os planos. No plano físico, manifesta-se como sexo; nos planos superiores, toma formas mais elevadas, mas o princípio é o mesmo: Geração, Regeneração e Criação.
+
+Nada pode ser criado sem a união dos princípios Masculino (projetivo) e Feminino (receptivo), tanto na natureza quanto na mente humana.', true, 6);
+
+-- Material do Módulo 4
+INSERT INTO materials (id, lesson_id, title, url, type) VALUES
+('m_4_1_kyb', 'l_4_1', 'O Caibalion (Trecho)', '#', 'pdf');
+
+-- Quizzes do Módulo 4
+INSERT INTO quizzes (id, lesson_id, question) VALUES
+('q_4_1', 'l_4_1', 'O Princípio do Mentalismo afirma que:'),
+('q_4_2', 'l_4_2', 'A Lei da Correspondência indica que:'),
+('q_4_3', 'l_4_3', 'O Princípio da Vibração explica as diferenças entre matéria e espírito como:'),
+('q_4_4', 'l_4_4', 'Segundo a Polaridade, o que são "quente" e "frio"?'),
+('q_4_5', 'l_4_5', 'Como o Princípio do Ritmo se manifesta?'),
+('q_4_6', 'l_4_6', 'O que é o "acaso" segundo o Hermetismo?'),
+('q_4_7', 'l_4_7', 'O Princípio de Gênero é responsável por:');
+
+-- Opções dos Quizzes do Módulo 4
+INSERT INTO quiz_options (id, quiz_id, text, is_correct) VALUES
+('opt_4_1_1', 'q_4_1', 'A matéria não existe', false),
+('opt_4_1_2', 'q_4_1', 'A mente é o princípio fundamental', true),
+('opt_4_1_3', 'q_4_1', 'Tudo é ilusão sem regras', false),
+
+('opt_4_2_1', 'q_4_2', 'Nada se conecta', false),
+('opt_4_2_2', 'q_4_2', 'Tudo é exatamente igual em tamanho', false),
+('opt_4_2_3', 'q_4_2', 'Existem padrões semelhantes em diferentes níveis', true),
+
+('opt_4_3_1', 'q_4_3', 'Diferenças de substância', false),
+('opt_4_3_2', 'q_4_3', 'Diferenças de taxa vibratória', true),
+('opt_4_3_3', 'q_4_3', 'Não há relação', false),
+
+('opt_4_4_1', 'q_4_4', 'Coisas totalmente diferentes', false),
+('opt_4_4_2', 'q_4_4', 'A mesma coisa em graus diferentes', true),
+('opt_4_4_3', 'q_4_4', 'Ilusões sensoriais', false),
+
+('opt_4_5_1', 'q_4_5', 'Em movimentos lineares infinitos', false),
+('opt_4_5_2', 'q_4_5', 'Em ciclos, marés e movimentos pendulares', true),
+('opt_4_5_3', 'q_4_5', 'Apenas na música', false),
+
+('opt_4_6_1', 'q_4_6', 'Sorte aleatória', false),
+('opt_4_6_2', 'q_4_6', 'Uma lei não reconhecida ou compreendida', true),
+('opt_4_6_3', 'q_4_6', 'O destino imutável', false),
+
+('opt_4_7_1', 'q_4_7', 'Apenas a biologia', false),
+('opt_4_7_2', 'q_4_7', 'Geração, criação e regeneração em todos os planos', true),
+('opt_4_7_3', 'q_4_7', 'Divisão social', false);
+
+-- =====================================================
+-- MÓDULO 5: Integração e Aplicação
+-- =====================================================
+INSERT INTO modules (id, course_id, title, description, is_locked, is_active, order_index) VALUES
+('m_5', 'c_quantum_full', 'Módulo 5: Integração e Aplicação', 'Unindo os conhecimentos para uma nova visão de mundo.', false, true, 4);
+
+-- Aula do Módulo 5
+INSERT INTO lessons (id, module_id, title, description, video_id, duration, content, is_active, order_index) VALUES
+('l_5_1', 'm_5', 'Integrando Ciência e Hermetismo', 'Modelos complementares para compreender a realidade.', 'integration_v1', '30 min',
+'Neste módulo, integramos os conceitos científicos (Mecânica Quântica, Vibração) e filosóficos (Leis Herméticas).
+
+Não se trata de substituir um pelo outro, mas de perceber como ambos oferecem linguagens diferentes para descrever os mesmos mecanismos da realidade. A ciência mede o externo; o hermetismo explica o princípio interno. Juntos, oferecem um mapa completo.', true, 0);
+
+-- Quiz do Módulo 5
+INSERT INTO quizzes (id, lesson_id, question) VALUES
+('q_5_1', 'l_5_1', 'O curso Quantum busca integrar:');
+
+-- Opções do Quiz do Módulo 5
+INSERT INTO quiz_options (id, quiz_id, text, is_correct) VALUES
+('opt_5_1_1', 'q_5_1', 'Ciência e Filosofia', true),
+('opt_5_1_2', 'q_5_1', 'Religião e Crença cega', false),
+('opt_5_1_3', 'q_5_1', 'Magia e Superstição', false);
+
+-- =====================================================
+-- MÓDULO 6: Encerramento
+-- =====================================================
+INSERT INTO modules (id, course_id, title, description, is_locked, is_active, order_index) VALUES
+('m_6', 'c_quantum_full', 'Módulo 6: Encerramento', 'Consolidação final da jornada.', false, true, 5);
+
+-- Aula do Módulo 6
+INSERT INTO lessons (id, module_id, title, description, video_id, duration, content, is_active, order_index) VALUES
+('l_6_1', 'm_6', 'Consolidação do Aprendizado', 'Revisão dos principais conceitos e próximos passos.', 'closing_v1', '10 min',
+'Chegamos ao final desta jornada introdutória. Revisamos como a percepção molda a realidade, como o mundo subatômico desafia o senso comum e como leis universais regem o fluxo da vida.
+
+O objetivo final não é decorar conceitos, mas expandir sua compreensão da realidade de forma prática, permitindo que você navegue pela vida com mais consciência e menos automatismo.', true, 0);
+
+-- Quiz do Módulo 6
+INSERT INTO quizzes (id, lesson_id, question) VALUES
+('q_6_1', 'l_6_1', 'O objetivo final do curso é:');
+
+-- Opções do Quiz do Módulo 6
+INSERT INTO quiz_options (id, quiz_id, text, is_correct) VALUES
+('opt_6_1_1', 'q_6_1', 'Decorar fórmulas matemáticas', false),
+('opt_6_1_2', 'q_6_1', 'Expandir a compreensão da realidade', true),
+('opt_6_1_3', 'q_6_1', 'Criar novos dogmas', false);
+
+-- =====================================================
+-- FIM DO SCRIPT
+-- =====================================================
+-- Resumo:
+-- - 1 curso
+-- - 6 módulos
+-- - 26 aulas
+-- - 9 materiais
+-- - 26 quizzes com múltiplas opções
+-- =====================================================
