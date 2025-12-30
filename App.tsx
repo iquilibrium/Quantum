@@ -214,10 +214,18 @@ const App: React.FC = () => {
 
         if (dbError) {
           console.warn("Curso não encontrado no DB ou erro de query. Usando Mock.", dbError);
+          // Mantém o COURSE_DATA (Mock) que já está no estado inicial
         } else if (dbData) {
-          console.log("Curso carregado do Supabase com sucesso!", dbData);
+          console.log("Curso carregado do Supabase:", dbData);
           const mappedCourse = mapDatabaseToCourse(dbData);
-          setCourseData(mappedCourse);
+
+          // Só sobrescreve se o curso do DB tiver conteúdo
+          if (mappedCourse.modules && mappedCourse.modules.length > 0) {
+            console.log("✅ Usando curso do Supabase com", mappedCourse.modules.length, "módulos");
+            setCourseData(mappedCourse);
+          } else {
+            console.warn("⚠️ Curso do DB está vazio. Mantendo COURSE_DATA mock.");
+          }
         }
 
         const { data: dbStudents, error: studentsError } = await supabase
