@@ -393,7 +393,6 @@ const App: React.FC = () => {
           name: data.name,
           email: data.email, // Assuming email can also be updated, though usually handled by auth
           avatar_url: newAvatarUrl,
-          updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
 
