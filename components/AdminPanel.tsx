@@ -165,7 +165,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
       try {
         // Salva a ordem de todos os módulos
         const promises = course.modules.map((m, idx) =>
-          supabase.from('modules').update({ order_index: idx }).eq('id', m.id)
+          supabase!.from('modules').update({ order_index: idx }).eq('id', m.id)
         );
         await Promise.all(promises);
         showSuccess('Ordem dos módulos sincronizada!');
@@ -182,7 +182,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
       try {
         const targetModule = course.modules[draggedLessonInfo.modIdx];
         const promises = targetModule.lessons.map((l, idx) =>
-          supabase.from('lessons').update({ order_index: idx }).eq('id', l.id)
+          supabase!.from('lessons').update({ order_index: idx }).eq('id', l.id)
         );
         await Promise.all(promises);
         showSuccess('Ordem das aulas sincronizada!');
