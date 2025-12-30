@@ -60,12 +60,9 @@ O curso Quantum não pede crença cega, mas observação, reflexão e abertura p
 ('l_1_inactive_ex', 'm_1', 'Aula Inativa Exemplo', 'Esta é uma aula de exemplo inativa para demonstração.', 'placeholder', '5 min',
 'Conteúdo temporário para aula inativa. Apenas administradores deveriam ver isso em modo de edição.', false, 4);
 
--- Materiais do Módulo 1
-INSERT INTO materials (id, lesson_id, title, url, type) VALUES
-('m_1_1_pdf', 'l_1_1', 'Guia de Percepção (PDF)', '#', 'pdf'),
-('m_1_1_art', 'l_1_1', 'Artigo: Neurociência e Realidade', '#', 'link'),
-('m_1_2_doc', 'l_1_2', 'Resumo: Newton vs Quantum', '#', 'doc'),
-('m_1_4_vid', 'l_1_4', 'Exercício de Flexibilidade Mental', '#', 'video');
+-- Materiais do Módulo 1 (Vazio por enquanto)
+-- INSERT INTO materials (id, lesson_id, title, url, type) VALUES ...
+
 
 -- Quizzes do Módulo 1
 INSERT INTO quizzes (id, lesson_id, question) VALUES
@@ -133,10 +130,9 @@ O princípio da incerteza mostra que a natureza possui limites fundamentais de p
 
 Ela mostra que a realidade é mais complexa do que o modelo clássico e que o observador influencia o sistema. O foco do curso é a clareza e profundidade, evitando o sensacionalismo mágico que muitas vezes distorce a ciência.', true, 4);
 
--- Materiais do Módulo 2
-INSERT INTO materials (id, lesson_id, title, url, type) VALUES
-('m_2_3_sim', 'l_2_3', 'Simulador da Dupla Fenda', '#', 'link'),
-('m_2_3_img', 'l_2_3', 'Diagrama de Interferência', '#', 'image');
+-- Materiais do Módulo 2 (Vazio)
+-- INSERT INTO materials ...
+
 
 -- Quizzes do Módulo 2
 INSERT INTO quizzes (id, lesson_id, question) VALUES
@@ -256,9 +252,9 @@ Para se tornar mestre da própria vida, deve-se deixar de ser um "efeito" das ci
 
 Nada pode ser criado sem a união dos princípios Masculino (projetivo) e Feminino (receptivo), tanto na natureza quanto na mente humana.', true, 6);
 
--- Material do Módulo 4
-INSERT INTO materials (id, lesson_id, title, url, type) VALUES
-('m_4_1_kyb', 'l_4_1', 'O Caibalion (Trecho)', '#', 'pdf');
+-- Materiais do Módulo 4 (Vazio)
+-- INSERT INTO materials ...
+
 
 -- Quizzes do Módulo 4
 INSERT INTO quizzes (id, lesson_id, question) VALUES
