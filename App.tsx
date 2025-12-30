@@ -108,11 +108,13 @@ const App: React.FC = () => {
     }
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth Event:", event, session?.user?.id);
+      console.log("🔐 Auth Event:", event, "User ID:", session?.user?.id);
       if (session) {
+        console.log("✅ Session detected, setting authenticated to true");
         setIsAuthenticated(true);
         if (!supabase) return;
 
+        console.log("📡 Fetching user profile from Supabase...");
         // Background sync: Fetch user profile to ensure data is up to date
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -121,12 +123,14 @@ const App: React.FC = () => {
           .single();
 
         if (profileError) {
-          console.error("Error fetching user profile:", profileError);
-          showError("Erro ao carregar perfil do usuário.");
+          console.error("❌ Error fetching user profile:", profileError);
+          console.log("⚠️ Using fallback user instead");
+          showError("Perfil não encontrado. Usando dados básicos.");
+
           // Fallback to a basic user if profile not found
           const fallbackUser: User = {
             id: session.user.id,
-            name: session.user.user_metadata.full_name || session.user.email || 'Usuário',
+            name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'Usuário',
             email: session.user.email || '',
             avatarUrl: session.user.user_metadata.avatar_url || 'https://i.pravatar.cc/150?img=68',
             role: 'student', // Default role
@@ -138,9 +142,10 @@ const App: React.FC = () => {
             completedLessons: [],
             lastAccess: new Date().toLocaleDateString('pt-BR')
           };
-          console.log("Setting Fallback User:", fallbackUser);
+          console.log("👤 Setting Fallback User:", fallbackUser.name);
           setUser(fallbackUser);
         } else if (profile) {
+          console.log("✅ Profile loaded from database:", profile.name);
           const loadedUser = {
             id: profile.id,
             name: profile.name,
@@ -155,11 +160,12 @@ const App: React.FC = () => {
             completedLessons: [], // TODO: Fetch from user_progress table
             lastAccess: profile.last_access ? new Date(profile.last_access).toLocaleDateString('pt-BR') : 'N/A'
           };
-          console.log("Setting Loaded User:", loadedUser);
+          console.log("👤 Setting Loaded User:", loadedUser.name);
           setUser(loadedUser);
         }
+        console.log("✅ Login process completed");
       } else {
-        console.log("No session, resetting user.");
+        console.log("🚪 No session, resetting user.");
         setIsAuthenticated(false);
         setUser(null);
         // Only stop loading if we are sure there is no session. 
