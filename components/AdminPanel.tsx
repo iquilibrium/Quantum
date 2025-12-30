@@ -687,15 +687,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
     }
   };
 
-  const handleAddStudentSubmit = async (studentData: { name: string; email: string; password: string; avatarUrl?: string }) => {
+  const handleAddStudentSubmit = async (studentData: { name: string; email: string; password: string; avatarUrl?: string; role: 'student' | 'coordinator' }) => {
     setIsAddingStudent(true);
-    const toastId = showLoading('Cadastrando novo aluno...');
+    const toastId = showLoading('Cadastrando novo usuário...');
     try {
       await onAddStudent(studentData);
-      showSuccess('Aluno cadastrado com sucesso!');
+      showSuccess('Usuário cadastrado com sucesso!');
       setIsAddStudentModalOpen(false);
     } catch (error: any) {
-      showError(`Erro ao cadastrar aluno: ${error.message}`);
+      showError(`Erro ao cadastrar usuário: ${error.message}`);
     } finally {
       dismissToast(toastId);
       setIsAddingStudent(false);
@@ -724,7 +724,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpda
           </div>
           <div className="flex gap-2 mt-4 md:mt-0">
             {activeTab === 'content' && <Button onClick={() => openModuleModal()}>+ Novo Módulo</Button>}
-            {activeTab === 'students' && <Button onClick={() => setIsAddStudentModalOpen(true)}>+ Cadastrar Novo Aluno</Button>} {/* Novo Botão */}
+            {activeTab === 'students' && <Button onClick={() => setIsAddStudentModalOpen(true)}>+ Cadastrar Novo Usuário</Button>} {/* Novo Botão */}
           </div>
         </div>
 
