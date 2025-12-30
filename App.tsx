@@ -432,7 +432,7 @@ const App: React.FC = () => {
     setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
   };
 
-  const handleAddStudent = async (studentData: { name: string; email: string; password: string; avatarUrl?: string }) => {
+  const handleAddStudent = async (studentData: { name: string; email: string; password: string; avatarUrl?: string; role: 'student' | 'coordinator' }) => {
     if (!supabase) {
       throw new Error("Supabase client not initialized.");
     }
@@ -444,16 +444,28 @@ const App: React.FC = () => {
         data: {
           full_name: studentData.name,
           avatar_url: studentData.avatarUrl || 'https://i.pravatar.cc/150?img=68',
+          role: studentData.role,
         },
       },
     });
 
     if (error) {
-      console.error("Erro ao cadastrar aluno no Supabase:", error);
+      console.error("Erro ao cadastrar usuário no Supabase:", error);
       throw error;
     }
 
     if (data.user) {
+      // 1. Manually update role in profiles table to ensure it's set correctly
+      // (The trigger might not be handling it yet)
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({ role: studentData.role })
+        .eq('id', data.user.id);
+
+      if (profileUpdateError) {
+        console.warn("Aviso: Usuário criado mas erro ao setar cargo:", profileUpdateError.message);
+      }
+
       const { data: newProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -461,7 +473,7 @@ const App: React.FC = () => {
         .single();
 
       if (profileError) {
-        console.error("Erro ao buscar perfil do novo aluno:", profileError);
+        console.error("Erro ao buscar perfil do novo usuário:", profileError);
         throw profileError;
       }
 

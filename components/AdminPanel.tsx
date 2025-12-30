@@ -11,7 +11,7 @@ interface AdminPanelProps {
   students: User[]; // Lista de todos os alunos
   onUpdateCourse: (updatedCourse: Course) => void;
   onUpdateStudent: (updatedStudent: User) => void; // Função para ativar/desativar aluno
-  onAddStudent: (studentData: { name: string; email: string; password: string; avatarUrl?: string }) => Promise<void>; // Nova prop
+  onAddStudent: (studentData: { name: string; email: string; password: string; avatarUrl?: string; role: 'student' | 'coordinator' }) => Promise<void>; // Nova prop
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ course, students, onUpdateCourse, onUpdateStudent, onAddStudent }) => {
