@@ -26,6 +26,7 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({
 }) => {
   const [activeModuleIndex, setActiveModuleIndex] = useState(initialModuleIndex);
   const [activeLessonIndex, setActiveLessonIndex] = useState(initialLessonIndex);
+  const [activeTab, setActiveTab] = useState<'content' | 'notes' | 'quiz'>('content');
 
   // Safety Check for Course Content
   const activeModule = course?.modules?.[activeModuleIndex];
