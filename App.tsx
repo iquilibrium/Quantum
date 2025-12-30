@@ -112,56 +112,75 @@ const App: React.FC = () => {
       if (session) {
         console.log("✅ Session detected, setting authenticated to true");
         setIsAuthenticated(true);
-        if (!supabase) return;
 
-        console.log("📡 Fetching user profile from Supabase...");
-        // Background sync: Fetch user profile to ensure data is up to date
-        const { data: profile, error: profileError } = await supabase
+        // CRITICAL FIX: Create fallback user IMMEDIATELY to unblock UI
+        const fallbackUser: User = {
+          id: session.user.id,
+          name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'Usuário',
+          email: session.user.email || '',
+          avatarUrl: session.user.user_metadata.avatar_url || 'https://i.pravatar.cc/150?img=68',
+          role: 'student',
+          isActive: true,
+          progress: 0,
+          points: 0,
+          level: 1,
+          badges: [],
+          completedLessons: [],
+          lastAccess: new Date().toLocaleDateString('pt-BR')
+        };
+
+        console.log("👤 Setting initial user:", fallbackUser.name);
+        setUser(fallbackUser);
+
+        if (!supabase) {
+          console.log("✅ Login completed (no supabase)");
+          return;
+        }
+
+        console.log("📡 Fetching enhanced profile from Supabase (with 3s timeout)...");
+        // Try to fetch profile with timeout (non-blocking)
+        const profilePromise = supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
 
-        if (profileError) {
-          console.error("❌ Error fetching user profile:", profileError);
-          console.log("⚠️ Using fallback user instead");
-          showError("Perfil não encontrado. Usando dados básicos.");
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), 3000)
+        );
 
-          // Fallback to a basic user if profile not found
-          const fallbackUser: User = {
-            id: session.user.id,
-            name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'Usuário',
-            email: session.user.email || '',
-            avatarUrl: session.user.user_metadata.avatar_url || 'https://i.pravatar.cc/150?img=68',
-            role: 'student', // Default role
-            isActive: true,
-            progress: 0,
-            points: 0,
-            level: 1,
-            badges: [],
-            completedLessons: [],
-            lastAccess: new Date().toLocaleDateString('pt-BR')
-          };
-          console.log("👤 Setting Fallback User:", fallbackUser.name);
-          setUser(fallbackUser);
+        let profile = null;
+        let profileError = null;
+
+        try {
+          const result = await Promise.race([profilePromise, timeoutPromise]) as any;
+          profile = result.data;
+          profileError = result.error;
+        } catch (err: any) {
+          console.warn("⚠️ Profile fetch timeout or error:", err.message);
+          profileError = err;
+        }
+
+        if (profileError) {
+          console.warn("⚠️ Could not load profile:", profileError.message || profileError);
+          console.log("✅ Continuing with fallback user");
         } else if (profile) {
-          console.log("✅ Profile loaded from database:", profile.name);
-          const loadedUser = {
-            id: profile.id,
-            name: profile.name || session.user.email?.split('@')[0] || 'Usuário',
-            email: profile.email || session.user.email || '',
-            avatarUrl: profile.avatar_url || 'https://i.pravatar.cc/150?img=68',
-            role: profile.role || 'student',
-            isActive: profile.is_active ?? true,
-            progress: profile.progress || 0,
-            points: profile.points || 0,
-            level: profile.level || 1,
-            badges: profile.badges || [],
-            completedLessons: [], // TODO: Fetch from user_progress table
-            lastAccess: profile.last_access ? new Date(profile.last_access).toLocaleDateString('pt-BR') : 'N/A'
+          console.log("✅ Enhanced profile loaded:", profile.name);
+          const enhancedUser = {
+            ...fallbackUser,
+            name: profile.name || fallbackUser.name,
+            email: profile.email || fallbackUser.email,
+            avatarUrl: profile.avatar_url || fallbackUser.avatarUrl,
+            role: profile.role || fallbackUser.role,
+            isActive: profile.is_active ?? fallbackUser.isActive,
+            progress: profile.progress || fallbackUser.progress,
+            points: profile.points || fallbackUser.points,
+            level: profile.level || fallbackUser.level,
+            badges: profile.badges || fallbackUser.badges,
+            lastAccess: profile.last_access ? new Date(profile.last_access).toLocaleDateString('pt-BR') : fallbackUser.lastAccess
           };
-          console.log("👤 Setting Loaded User:", loadedUser.name);
-          setUser(loadedUser);
+          console.log("👤 Updating to enhanced user:", enhancedUser.name);
+          setUser(enhancedUser);
         }
         console.log("✅ Login process completed");
       } else {
